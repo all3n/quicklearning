@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>parent</artifactId>
+        <groupId>com.devhc.quicklearning</groupId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../</relativePath>
+    </parent>
+    <packaging>pom</packaging>
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>assembly</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <properties>
+        <deploy.app>app</deploy.app>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>com.devhc.quicklearning</groupId>
+            <artifactId>core</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptors>
+                        <descriptor>src/main/assembly/${deploy.app}.xml</descriptor>
+                    </descriptors>
+                    <outputDirectory>${project.parent.basedir}/target</outputDirectory>
+                    <finalName>${deploy.app}-assembly-${project.parent.version}</finalName>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>assembly-deploy-package</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
+</project>

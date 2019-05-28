@@ -1,0 +1,31 @@
+<assembly>
+  <id>deploy</id>
+  <formats>
+    <format>tar.gz</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <dependencySets>
+    <dependencySet>
+      <useProjectArtifact>true</useProjectArtifact>
+      <includes>
+        <include>com.devhc.quicklearning:core</include>
+      </includes>
+    </dependencySet>
+  </dependencySets>
+  <fileSets>
+    <fileSet>
+      <outputDirectory>conf</outputDirectory>
+      <directory>${project.parent.basedir}/config/${deploy.app}</directory>
+    </fileSet>
+    <fileSet>
+      <outputDirectory>bin</outputDirectory>
+      <fileMode>0755</fileMode>
+      <directory>${project.parent.basedir}/scripts</directory>
+    </fileSet>
+    <fileSet>
+      <outputDirectory>/libs</outputDirectory>
+      <directory>${project.parent.basedir}/core/target/libs</directory>
+    </fileSet>
+  </fileSets>
+</assembly>
+
