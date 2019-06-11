@@ -14,28 +14,25 @@
   <version>0.0.1-SNAPSHOT</version>
   <properties>
     <hadoop.version>2.6.0</hadoop.version>
+    <hadoop.scope>provided</hadoop.scope>
+    <!--        <hadoop.scope>compile</hadoop.scope>-->
   </properties>
 
   <dependencies>
     <!-- hadoop support -->
     <dependency>
       <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-common</artifactId>
-      <scope>provided</scope>
+      <artifactId>hadoop-client</artifactId>
       <version>${hadoop.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-yarn-api</artifactId>
-      <scope>provided</scope>
-      <version>${hadoop.version}</version>
+      <scope>${hadoop.scope}</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-yarn-client</artifactId>
       <version>${hadoop.version}</version>
-      <scope>provided</scope>
+      <scope>${hadoop.scope}</scope>
     </dependency>
+
     <!-- hadoop end -->
 
     <!-- spring boot libs start -->
@@ -43,6 +40,11 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-devtools</artifactId>
@@ -54,6 +56,18 @@
       <scope>test</scope>
     </dependency>
 
+    <!--
+    <dependency>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
+      <version>2.6</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>11.0.2</version>
+    </dependency>
+    -->
 
 
     <dependency>
@@ -134,8 +148,8 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <source>7</source>
-          <target>7</target>
+          <source>8</source>
+          <target>8</target>
         </configuration>
       </plugin>
     </plugins>

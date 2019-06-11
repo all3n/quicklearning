@@ -26,6 +26,10 @@
       <outputDirectory>/libs</outputDirectory>
       <directory>${project.parent.basedir}/core/target/libs</directory>
     </fileSet>
+    <fileSet>
+      <outputDirectory>/conf</outputDirectory>
+      <directory>${project.parent.basedir}/conf</directory>
+    </fileSet>
   </fileSets>
 </assembly>
 

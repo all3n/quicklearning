@@ -1,10 +1,9 @@
-package com.devhc.quicklearning.client;
+package com.devhc.quicklearning;
 
+import com.devhc.quicklearning.conf.QuickLearningConf;
 import com.devhc.quicklearning.utils.JobUtils;
-import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -27,7 +26,6 @@ import org.apache.hadoop.yarn.api.records.LocalResource;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import org.apache.hadoop.yarn.api.records.Resource;
-import org.apache.hadoop.yarn.api.records.URL;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.client.api.YarnClientApplication;
@@ -44,6 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Lazy;
 
 import static com.devhc.quicklearning.utils.JobUtils.TEMP_PERM;
 
@@ -54,12 +53,22 @@ public class Client {
   private Logger LOG = LoggerFactory.getLogger(Client.class);
 
   private final String user;
-  private final String queue;
   @Option(name = "-t", aliases = "--type", usage = "job type")
   private String type = "xdl";
 
+  @Option(name = "-q", aliases = "--queue", usage = "queue")
+  private String queue = "default";
+
+
   @Option(name = "-c", aliases = "--config", usage = "job config")
   private String config = "config.json";
+
+  @Option(name = "-e", aliases = "--env", usage = "env")
+  private String envFile = "../ql.tar.gz";
+
+
+  @Option(name = "-n", aliases = "--name", usage = "job name")
+  private String jobName = "quicklearning test";
 
   @Option(name = "-d", aliases = "--deps", usage = "dep dirs")
   private String deps = ".";
@@ -68,14 +77,13 @@ public class Client {
 
 
   private YarnClient yarnClient;
-  private YarnConfiguration conf;
+  private QuickLearningConf conf;
   private ApplicationId appId;
   private YarnClientApplication app;
   private ApplicationSubmissionContext ctx;
   private FileSystem fs;
   private final ApplicationArguments applicationArguments;
   private String appBasePath;
-  private String jobName;
 
   @Autowired
   public Client(ApplicationArguments applicationArguments)
@@ -96,17 +104,37 @@ public class Client {
 
     this.dependentFiles.addAll(JobUtils.splitString(this.deps, ","));
 
-    jobName = "[ql][test submit]";
-    this.queue = "default";
     initYarnClient();
     createYarnApp();
     yarnClient.submitApplication(ctx);
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      @Override
+      public void run() {
+        Client.this.shutdown();
+      }
+    });
     FinalApplicationStatus appState = waitApplicationFinish(yarnClient, appId);
+
     System.out.println(String.format("%s:%s", appId.toString(), appState.toString()));
     if (appState == FinalApplicationStatus.SUCCEEDED) {
       System.exit(0);
     } else {
       System.exit(-1);
+    }
+  }
+
+  private void shutdown() {
+    try {
+      YarnApplicationState state = yarnClient.getApplicationReport(appId).getYarnApplicationState();
+      LOG.info("app shutdown");
+      if (state == YarnApplicationState.RUNNING || state == YarnApplicationState.ACCEPTED || state == YarnApplicationState.SUBMITTED) {
+        LOG.info("kill applicationId:{}", appId);
+        yarnClient.killApplication(appId);
+      }
+    } catch (YarnException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
     }
   }
 
@@ -136,6 +164,7 @@ public class Client {
       throws IOException, YarnException, InterruptedException {
     ApplicationReport appReport = yarnClient
         .getApplicationReport(appId);
+    LOG.info(appReport.getTrackingUrl());
     while (
         appReport.getYarnApplicationState() != YarnApplicationState.FAILED &&
             appReport.getYarnApplicationState() != YarnApplicationState.FINISHED &&
@@ -190,32 +219,41 @@ public class Client {
   private Map<String, LocalResource> setupResourceMap() throws IOException {
     FileSystem fs = FileSystem.get(conf);
     Map<String, LocalResource> resourceMap = new HashMap<String, LocalResource>();
-    for (String file : this.dependentFiles) {
-//      if (file.endsWith(".jar")) {
-      String fileName = JobUtils.getName(file);
-      LocalResource defConf = Records.newRecord(LocalResource.class);
-      setupResource(new Path(this.appBasePath + fileName), defConf);
-      resourceMap.put(fileName, defConf);
-//      }
-    }
+//    for (String file : this.dependentFiles) {
+////      if (file.endsWith(".jar")) {
+//      String fileName = JobUtils.getName(file);
+//      LocalResource defConf = Records.newRecord(LocalResource.class);
+//      setupResource(new Path(this.appBasePath + fileName), defConf);
+//      resourceMap.put(fileName, defConf);
+////      }
+//    }
+    setResource(resourceMap, config);
+    setResource(resourceMap, envFile);
+    setResource(resourceMap, "bin/appMaster.sh");
+
+    return resourceMap;
+  }
+
+  private void setResource(Map<String, LocalResource> resourceMap, String file) throws IOException {
     {
-      String fileName = JobUtils.getName(config);
+      String fileName = JobUtils.getName(file);
       LocalResource appXDLConfig = Records.newRecord(LocalResource.class);
       Path configPath = new Path(this.appBasePath + fileName);
       setupResource(configPath, appXDLConfig);
       resourceMap.put(fileName, appXDLConfig);
       fs.setPermission(configPath, TEMP_PERM);
     }
-    return resourceMap;
   }
 
 
   private void uploadDependentFiles(String basePath, ArrayList<String> dependentFileList)
       throws IOException {
     uploadLocalFileToHdfs(this.config, basePath);
-    if (dependentFileList != null) {
-      uploadFilesToHdfs(dependentFileList, basePath);
-    }
+    uploadLocalFileToHdfs(this.envFile, basePath);
+    uploadLocalFileToHdfs("bin/appMaster.sh", basePath);
+//    if (dependentFileList != null) {
+//      uploadFilesToHdfs(dependentFileList, basePath);
+//    }
     LOG.info("Upload user files success.");
   }
 
@@ -271,7 +309,7 @@ public class Client {
     uploadDependentFiles(appBasePath, this.dependentFiles);
 
     Map<String, LocalResource> resourceMap = setupResourceMap();
-    String amStartCommand = "ls -al *   1>"
+    String amStartCommand = "bash appMaster.sh  1>"
         + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stdout"
         + " 2>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stderr";
     ContainerLaunchContext amContainer = setupApplicationMasterContainer(amStartCommand,
@@ -292,7 +330,7 @@ public class Client {
 
   private void initYarnClient() throws IOException {
     yarnClient = YarnClient.createYarnClient();
-    conf = new YarnConfiguration();
+    conf = new QuickLearningConf();
     yarnClient.init(conf);
     yarnClient.start();
 

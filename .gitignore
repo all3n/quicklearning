@@ -2,8 +2,7 @@
 # Created by https://www.gitignore.io/api/vim,java,python,intellij+all
 # Edit at https://www.gitignore.io/?templates=vim,java,python,intellij+all
 
-### Intellij+all ###
-# Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and WebStorm
+### Intellij+all ### # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and WebStorm
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
 
 # User-specific stuff
@@ -256,5 +255,6 @@ Session.vim
 tags
 # Persistent undo
 [._]*.un~
+/upload
 
 # End of https://www.gitignore.io/api/vim,java,python,intellij+all
