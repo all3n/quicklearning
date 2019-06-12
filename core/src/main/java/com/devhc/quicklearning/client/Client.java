@@ -1,7 +1,12 @@
-package com.devhc.quicklearning;
+package com.devhc.quicklearning.client;
+
+import static com.devhc.quicklearning.utils.JobUtils.TEMP_PERM;
 
 import com.devhc.quicklearning.conf.QuickLearningConf;
 import com.devhc.quicklearning.utils.JobUtils;
+import com.google.common.collect.Lists;
+import com.google.inject.Guice;
+import com.google.inject.Module;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -10,7 +15,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import javax.inject.Inject;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -33,94 +40,33 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.Apps;
 import org.apache.hadoop.yarn.util.Records;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Lazy;
 
-import static com.devhc.quicklearning.utils.JobUtils.TEMP_PERM;
-
-@SpringBootApplication
 public class Client {
 
   private final String localTmpDir;
   private Logger LOG = LoggerFactory.getLogger(Client.class);
 
   private final String user;
-  @Option(name = "-t", aliases = "--type", usage = "job type")
-  private String type = "xdl";
-
-  @Option(name = "-q", aliases = "--queue", usage = "queue")
-  private String queue = "default";
-
-
-  @Option(name = "-c", aliases = "--config", usage = "job config")
-  private String config = "config.json";
-
-  @Option(name = "-e", aliases = "--env", usage = "env")
-  private String envFile = "../ql.tar.gz";
-
-
-  @Option(name = "-n", aliases = "--name", usage = "job name")
-  private String jobName = "quicklearning test";
-
-  @Option(name = "-d", aliases = "--deps", usage = "dep dirs")
-  private String deps = ".";
+  private ClientArgs args;
 
   private ArrayList<String> dependentFiles = new ArrayList<>();
-
-
   private YarnClient yarnClient;
   private QuickLearningConf conf;
   private ApplicationId appId;
   private YarnClientApplication app;
   private ApplicationSubmissionContext ctx;
   private FileSystem fs;
-  private final ApplicationArguments applicationArguments;
   private String appBasePath;
 
-  @Autowired
-  public Client(ApplicationArguments applicationArguments)
-      throws IOException, YarnException, InterruptedException {
-    this.applicationArguments = applicationArguments;
-    CmdLineParser parser = new CmdLineParser(this);
-    try {
-      parser.parseArgument(applicationArguments.getSourceArgs());
-    } catch (CmdLineException e) {
-      e.printStackTrace();
-      parser.printUsage(System.err);
-      System.exit(-1);
-    }
-    System.out.println(config);
-    System.out.println(type);
+  @Inject
+  public Client(ClientArgs args) {
+    this.args = args;
+    LOG.info("args {}", args);
     user = JobUtils.getCurUser();
     this.localTmpDir = createLocalTmpDir(user);
-
-    this.dependentFiles.addAll(JobUtils.splitString(this.deps, ","));
-
-    initYarnClient();
-    createYarnApp();
-    yarnClient.submitApplication(ctx);
-    Runtime.getRuntime().addShutdownHook(new Thread() {
-      @Override
-      public void run() {
-        Client.this.shutdown();
-      }
-    });
-    FinalApplicationStatus appState = waitApplicationFinish(yarnClient, appId);
-
-    System.out.println(String.format("%s:%s", appId.toString(), appState.toString()));
-    if (appState == FinalApplicationStatus.SUCCEEDED) {
-      System.exit(0);
-    } else {
-      System.exit(-1);
-    }
+    this.dependentFiles.addAll(JobUtils.splitString(args.getDeps(), ","));
   }
 
   private void shutdown() {
@@ -227,8 +173,8 @@ public class Client {
 //      resourceMap.put(fileName, defConf);
 ////      }
 //    }
-    setResource(resourceMap, config);
-    setResource(resourceMap, envFile);
+    setResource(resourceMap, args.getConfig());
+    setResource(resourceMap, args.getEnvFile());
     setResource(resourceMap, "bin/appMaster.sh");
 
     return resourceMap;
@@ -248,8 +194,8 @@ public class Client {
 
   private void uploadDependentFiles(String basePath, ArrayList<String> dependentFileList)
       throws IOException {
-    uploadLocalFileToHdfs(this.config, basePath);
-    uploadLocalFileToHdfs(this.envFile, basePath);
+    uploadLocalFileToHdfs(args.getConfig(), basePath);
+    uploadLocalFileToHdfs(args.getEnvFile(), basePath);
     uploadLocalFileToHdfs("bin/appMaster.sh", basePath);
 //    if (dependentFileList != null) {
 //      uploadFilesToHdfs(dependentFileList, basePath);
@@ -320,11 +266,11 @@ public class Client {
     capability.setMemory(256);
     capability.setVirtualCores(1);
 
-    ctx.setApplicationType(type);
-    ctx.setApplicationName(jobName);
+    ctx.setApplicationType(args.getType());
+    ctx.setApplicationName(args.getJobName());
     ctx.setAMContainerSpec(amContainer);
     ctx.setResource(capability);
-    ctx.setQueue(queue);
+    ctx.setQueue(args.getQueue());
 
   }
 
@@ -337,8 +283,35 @@ public class Client {
     fs = FileSystem.get(conf);
   }
 
+  public void start() throws Exception {
+    initYarnClient();
+    createYarnApp();
+    yarnClient.submitApplication(ctx);
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      @Override
+      public void run() {
+        Client.this.shutdown();
+      }
+    });
+    FinalApplicationStatus appState = waitApplicationFinish(yarnClient, appId);
+
+    System.out.println(String.format("%s:%s", appId.toString(), appState.toString()));
+    if (appState == FinalApplicationStatus.SUCCEEDED) {
+      System.exit(0);
+    } else {
+      System.exit(-1);
+    }
+  }
 
   public static void main(String[] args) {
-    SpringApplication.run(Client.class, args);
+    try {
+      List<Module> moduleList = Lists.newArrayList();
+      moduleList.add(new ClientModules(args));
+      Client client = Guice.createInjector(moduleList).getInstance(Client.class);
+      client.start();
+
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 }

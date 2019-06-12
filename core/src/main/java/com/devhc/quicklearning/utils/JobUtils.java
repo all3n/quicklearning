@@ -13,10 +13,13 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.yarn.api.records.URL;
 import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class JobUtils {
+
   private static Logger LOG = LoggerFactory.getLogger(JobUtils.class);
   public static final FsPermission TEMP_PERM = new FsPermission("777");
   public static final String HDFS_USER_ROOT = "/user";
@@ -26,6 +29,7 @@ public class JobUtils {
   public static String getName(String filePath) {
     return new Path(filePath).getName();
   }
+
   public static String getCurUser() {
     return System.getProperty("user.name");
   }
@@ -49,8 +53,6 @@ public class JobUtils {
     }
     return basePath;
   }
-
-
 
 
   public static ArrayList<String> splitString(String value, String seperator) {
@@ -96,5 +98,18 @@ public class JobUtils {
     url.setScheme(uri.getScheme());
     url.setFile(uri.getPath());
     return url;
+  }
+
+
+  public static <T> T parseArgument(T obj, String args[]) {
+    CmdLineParser parser = new CmdLineParser(obj);
+    try {
+      parser.parseArgument(args);
+    } catch (CmdLineException e) {
+      e.printStackTrace();
+      parser.printUsage(System.err);
+      System.exit(-1);
+    }
+    return obj;
   }
 }

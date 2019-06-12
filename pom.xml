@@ -16,6 +16,7 @@
   <name>quick learning</name>
   <description>quick learning</description>
 
+
   <build>
     <plugins>
       <plugin>

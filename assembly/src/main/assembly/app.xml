@@ -30,6 +30,10 @@
       <outputDirectory>/conf</outputDirectory>
       <directory>${project.parent.basedir}/conf</directory>
     </fileSet>
+    <fileSet>
+      <outputDirectory>/public</outputDirectory>
+      <directory>${project.parent.basedir}/public</directory>
+    </fileSet>
   </fileSets>
 </assembly>
 

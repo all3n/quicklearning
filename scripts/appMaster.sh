@@ -6,5 +6,4 @@ ls -aRl
 CLASSPATH=$APP_DIR/conf/:$APP_DIR/*:$APP_DIR/libs/*:$CLASSPATH
 $JAVA_HOME/bin/java \
   -cp $CLASSPATH \
-  -Dspring.profiles.active=master \
-  com.devhc.quicklearning.AppMaster
+  com.devhc.quicklearning.master.AppMaster -w $APP_DIR/public
