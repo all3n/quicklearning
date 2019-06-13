@@ -8,7 +8,7 @@
     <dependencySet>
       <useProjectArtifact>true</useProjectArtifact>
       <includes>
-        <include>com.devhc.quicklearning:core</include>
+        <include>com.devhc.quicklearning:quicklearning-core</include>
       </includes>
     </dependencySet>
   </dependencySets>
@@ -32,7 +32,7 @@
     </fileSet>
     <fileSet>
       <outputDirectory>/public</outputDirectory>
-      <directory>${project.parent.basedir}/public</directory>
+      <directory>${project.parent.basedir}/public/dist</directory>
     </fileSet>
   </fileSets>
 </assembly>

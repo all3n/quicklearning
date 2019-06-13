@@ -1,61 +1,45 @@
 package com.devhc.quicklearning.server;
 
 
-import com.devhc.quicklearning.controllers.IndexController;
 import com.devhc.quicklearning.master.MasterArgs;
-import com.google.inject.Injector;
+import com.devhc.quicklearning.server.jersey.JerseyServer;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import javax.inject.Inject;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.jboss.resteasy.plugins.guice.GuiceResteasyBootstrapServletContextListener;
-import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class WebServer {
 
-  private final String webApp;
+  private final JerseyServer server;
+  private String host;
   private Logger LOG = LoggerFactory.getLogger(WebServer.class);
-  private final Server server;
   MasterArgs args;
 
+
   @Inject
-  public WebServer(MasterArgs args, Injector injector) {
+  public WebServer(MasterArgs args, JerseyServer server) {
     this.args = args;
-    server = new Server(args.getPort());
-    this.webApp = args.getWebAppDir();
-    LOG.info("web app:{}", webApp);
-    configureServer(injector);
-  }
-
-  private void configureServer(Injector injector) {
-    server.setStopAtShutdown(true);
-    String controllPkg = IndexController.class.getPackage().getName();
-    System.out.println(controllPkg);
-
-    ServletContextHandler ctx = new ServletContextHandler(server, "/",
-        ServletContextHandler.SESSIONS);
-    ctx.setResourceBase(webApp);
-
-//    ctx.addFilter(GuiceFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
-//    ctx.setInitParameter("resteasy.guice.modules", "");
-    ctx.addEventListener(injector.getInstance(GuiceResteasyBootstrapServletContextListener.class));
-
-    ServletHolder sh = new ServletHolder(HttpServletDispatcher.class);
-    sh.setInitParameter("resteasy.servlet.mapping.prefix", "/api");
-    ctx.addServlet(sh, "/api/*");
-
-//   ctx.addServlet(DefaultServlet.class, "/");
-
-    server.setHandler(ctx);
+    this.server = server;
+    try {
+      this.host = InetAddress.getLocalHost().getHostName();
+    } catch (UnknownHostException e) {
+      e.printStackTrace();
+    }
 
   }
 
+
+  public String webUrl() {
+    return "http://" + host + ":" + getPort();
+  }
+
+  public String getHost(){
+    return host;
+  }
 
   public int getPort() {
-    return 0;
-
+    return server.getPort();
   }
 
   public void init() {
@@ -73,7 +57,6 @@ public class WebServer {
 
   public void stop() throws Exception {
     server.stop();
-
   }
 
 }

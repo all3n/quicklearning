@@ -6,7 +6,7 @@ public class TestAppMaster {
 
   public static void main(String[] args) throws IOException {
     String appDir = new File(".").getCanonicalPath();
-    String webDir = appDir + "/" + "public";
+    String webDir = appDir + "/" + "public/dist";
     AppMaster.main(new String[]{
         "-w", webDir, "-p", "33333"
     });

@@ -13,6 +13,6 @@ public class IndexServlet extends HttpServlet {
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp)
       throws ServletException, IOException {
-    resp.getWriter().println("fasdf");
+    resp.getWriter().println("test servlet");
   }
 }

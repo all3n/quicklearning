@@ -25,7 +25,6 @@ public class AppMaster {
 
   BaseScheduler scheduler;
 
-  private String webUrl;
 
 
   @Inject
@@ -44,11 +43,16 @@ public class AppMaster {
 
   public void start() throws Exception {
     LOG.info("app master start");
-    LOG.info("web listen {}:{}", address.getHostAddress(), webServer.getPort());
-    this.webUrl = "http://" + address.getHostAddress() + ":" + webServer.getPort();
-    scheduler.start();
     webServer.start();
-    webServer.join();
+    LOG.info("web listen {}:{}", webServer.getHost(), webServer.getPort());
+
+
+
+
+    scheduler.start();
+//    webServer.join();
+    LOG.info("---------------");
+
   }
 
 
