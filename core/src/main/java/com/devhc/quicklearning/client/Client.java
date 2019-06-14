@@ -162,7 +162,11 @@ public class Client {
     localResource.setResource(JobUtils.fromURI(resourcePath.toUri(), null));
     localResource.setSize(fileStatus.getLen());
     localResource.setTimestamp(fileStatus.getModificationTime());
-    localResource.setType(LocalResourceType.FILE);
+    if(resourcePath.getName().endsWith(".gz") && resourcePath.getName().endsWith(".tar")){
+      localResource.setType(LocalResourceType.ARCHIVE);
+    }else{
+      localResource.setType(LocalResourceType.FILE);
+    }
     localResource.setVisibility(LocalResourceVisibility.PUBLIC);
   }
 
@@ -187,11 +191,11 @@ public class Client {
   private void setResource(Map<String, LocalResource> resourceMap, String file) throws IOException {
     {
       String fileName = JobUtils.getName(file);
-      LocalResource appXDLConfig = Records.newRecord(LocalResource.class);
-      Path configPath = new Path(this.appBasePath + fileName);
-      setupResource(configPath, appXDLConfig);
-      resourceMap.put(fileName, appXDLConfig);
-      fs.setPermission(configPath, TEMP_PERM);
+      LocalResource localRes = Records.newRecord(LocalResource.class);
+      Path filePath = new Path(this.appBasePath + fileName);
+      setupResource(filePath, localRes);
+      resourceMap.put(fileName, localRes);
+      fs.setPermission(filePath, TEMP_PERM);
     }
   }
 
@@ -261,7 +265,7 @@ public class Client {
     Map<String, LocalResource> resourceMap = setupResourceMap();
     String appMasterClazz = AppMaster.class.getName();
     String amStartCommand = "bash "+ Constants.YARN_START_SCRIPT+" " + appMasterClazz +
-        " -w $APP_DIR/public -s yarn  -t=" + args.getType() + "  1>"
+        " -w public -s yarn  -t=" + args.getType() + "  1>"
         + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stdout"
         + " 2>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stderr";
 
