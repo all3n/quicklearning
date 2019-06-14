@@ -1,7 +1,9 @@
 package com.devhc.quicklearning.master;
 
+import com.devhc.quicklearning.apps.BaseApp;
 import com.devhc.quicklearning.scheduler.BaseScheduler;
 import com.devhc.quicklearning.server.WebServer;
+import com.devhc.quicklearning.server.rpc.RpcServer;
 import com.google.common.collect.Lists;
 import com.google.inject.Guice;
 import com.google.inject.Module;
@@ -23,8 +25,13 @@ public class AppMaster {
   @Inject
   WebServer webServer;
 
+  @Inject
+  RpcServer rpcServer;
+
   BaseScheduler scheduler;
 
+  @Inject
+  BaseApp app;
 
 
   @Inject
@@ -45,9 +52,7 @@ public class AppMaster {
     LOG.info("app master start");
     webServer.start();
     LOG.info("web listen {}:{}", webServer.getHost(), webServer.getPort());
-
-
-
+    rpcServer.start();
 
     scheduler.start();
 //    webServer.join();
@@ -58,6 +63,8 @@ public class AppMaster {
 
   private void stop() throws Exception {
     scheduler.stop();
+    webServer.stop();
+    rpcServer.stop();
   }
 
 

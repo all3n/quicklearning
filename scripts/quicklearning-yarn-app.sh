@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 export APP_DIR=`cd "$(dirname $0)/"; pwd`
 env
+echo "---------------------------------------------------"
+ls -aRl
+echo "---------------------------------------------------"
 tar -zxvf $APP_DIR/ql.tar.gz
 ls -aRl
 
@@ -14,5 +17,5 @@ fi
 
 CLASSPATH=$APP_DIR/conf/:$APP_DIR/*:$CLASSPATH
 $JAVA_HOME/bin/java \
-  -cp $CLASSPATH \
-  com.devhc.quicklearning.master.AppMaster -w $APP_DIR/public -s yarn
+  -cp $CLASSPATH "$@"
+

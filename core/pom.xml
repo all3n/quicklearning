@@ -178,6 +178,11 @@
       <version>${boringssl.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>com.alibaba</groupId>
+      <artifactId>fastjson</artifactId>
+      <version>1.2.28</version>
+    </dependency>
   </dependencies>
 
 

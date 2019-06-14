@@ -3,6 +3,8 @@ package com.devhc.quicklearning.client;
 import static com.devhc.quicklearning.utils.JobUtils.TEMP_PERM;
 
 import com.devhc.quicklearning.conf.QuickLearningConf;
+import com.devhc.quicklearning.master.AppMaster;
+import com.devhc.quicklearning.utils.Constants;
 import com.devhc.quicklearning.utils.JobUtils;
 import com.google.common.collect.Lists;
 import com.google.inject.Guice;
@@ -73,7 +75,8 @@ public class Client {
     try {
       YarnApplicationState state = yarnClient.getApplicationReport(appId).getYarnApplicationState();
       LOG.info("app shutdown");
-      if (state == YarnApplicationState.RUNNING || state == YarnApplicationState.ACCEPTED || state == YarnApplicationState.SUBMITTED) {
+      if (state == YarnApplicationState.RUNNING || state == YarnApplicationState.ACCEPTED
+          || state == YarnApplicationState.SUBMITTED) {
         LOG.info("kill applicationId:{}", appId);
         yarnClient.killApplication(appId);
       }
@@ -147,6 +150,7 @@ public class Client {
     Apps.addToEnvironment(appMasterEnv, Environment.CLASSPATH.name(),
         Environment.PWD.$() + File.separator + "*",
         classPathSeparator);
+    appMasterEnv.put(Constants.BASE_HDFS_PATH, appBasePath);
     return appMasterEnv;
   }
 
@@ -175,7 +179,7 @@ public class Client {
 //    }
     setResource(resourceMap, args.getConfig());
     setResource(resourceMap, args.getEnvFile());
-    setResource(resourceMap, "bin/appMaster.sh");
+    setResource(resourceMap, "bin/"+Constants.YARN_START_SCRIPT);
 
     return resourceMap;
   }
@@ -196,7 +200,7 @@ public class Client {
       throws IOException {
     uploadLocalFileToHdfs(args.getConfig(), basePath);
     uploadLocalFileToHdfs(args.getEnvFile(), basePath);
-    uploadLocalFileToHdfs("bin/appMaster.sh", basePath);
+    uploadLocalFileToHdfs("bin/"+Constants.YARN_START_SCRIPT, basePath);
 //    if (dependentFileList != null) {
 //      uploadFilesToHdfs(dependentFileList, basePath);
 //    }
@@ -255,9 +259,12 @@ public class Client {
     uploadDependentFiles(appBasePath, this.dependentFiles);
 
     Map<String, LocalResource> resourceMap = setupResourceMap();
-    String amStartCommand = "bash appMaster.sh  1>"
+    String appMasterClazz = AppMaster.class.getName();
+    String amStartCommand = "bash "+ Constants.YARN_START_SCRIPT+" " + appMasterClazz +
+        " -w $APP_DIR/public -s yarn  -t=" + args.getType() + "  1>"
         + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stdout"
         + " 2>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stderr";
+
     ContainerLaunchContext amContainer = setupApplicationMasterContainer(amStartCommand,
         resourceMap);
 
