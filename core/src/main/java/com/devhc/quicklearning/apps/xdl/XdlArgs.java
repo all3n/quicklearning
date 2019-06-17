@@ -42,5 +42,8 @@ public class XdlArgs {
   @Option(name = "-xp", aliases = "--export_ports", usage = "export port")
   private String exportPorts;
 
+  @Option(name = "-e", aliases = "--entry", usage = "entry script")
+  private String entry;
+
 
 }

@@ -1,21 +1,25 @@
-package com.devhc.quicklearning.scheduler;
+package com.devhc.quicklearning.scheduler.yarn;
 
 import com.devhc.quicklearning.apps.AppJob;
 import com.devhc.quicklearning.apps.BaseApp;
 import com.devhc.quicklearning.conf.QuickLearningConf;
 import com.devhc.quicklearning.master.MasterArgs;
-import com.devhc.quicklearning.scheduler.yarn.YarnResourceAllocator;
+import com.devhc.quicklearning.scheduler.BaseScheduler;
+import com.devhc.quicklearning.scheduler.yarn.YarnResourceAllocator.YarnContainerInfo;
 import com.devhc.quicklearning.server.WebServer;
 import com.devhc.quicklearning.utils.Constants;
+import com.devhc.quicklearning.utils.JobConfigJson;
 import com.devhc.quicklearning.utils.JobUtils;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
+import javax.security.auth.login.Configuration;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -61,7 +65,8 @@ public class YarnScheduler extends BaseScheduler {
   MasterArgs masterArgs;
   @Inject
   BaseApp app;
-
+  @Inject
+  JobConfigJson jobConfig;
   private YarnResourceAllocator yarnResourceAlloctor;
   private Map<String, String> appEnvs = Maps.newHashMap();
   private Map<String, LocalResource> localResources = Maps.newHashMap();
@@ -69,8 +74,9 @@ public class YarnScheduler extends BaseScheduler {
   private String cmdSuffix;
   private int totalWorkerNum;
 
-  private int totalFinishNum;
-  private int successWorkerNum;
+  private int totalFinishNum = 0;
+  private int successWorkerNum = 0;
+  private int failWorkerNum = 0;
 
 
   @Override
@@ -96,7 +102,7 @@ public class YarnScheduler extends BaseScheduler {
 
 
   @Override
-  public void start() throws Exception {
+  public boolean start() throws Exception {
     initClients();
     register();
     initResources();
@@ -114,24 +120,40 @@ public class YarnScheduler extends BaseScheduler {
       for (int ci = 0; ci < instanceNum; ci++) {
         String cmd = app.genCmds(appJob, ci, cmdSuffix);
         Container container = yarnResourceAlloctor.getContainer(appJob.getType(), ci);
-        LOG.info("launch {} {} container:{}",ci, appJob, container);
+        LOG.info("launch {} {} container:{}", ci, appJob, container);
         if (container != null) {
           launchContainer(container, Collections.singletonList(cmd));
         }
       }
     }
-    waitJobFinished();
+    boolean isSuccess = waitJobFinished();
+    this.processExit(isSuccess);
+    return isSuccess;
   }
 
-  private void waitJobFinished() throws IOException, YarnException, InterruptedException {
+  private void processExit(boolean isSuccess) throws IOException, YarnException {
+    if (isSuccess) {
+      rmClient.unregisterApplicationMaster(FinalApplicationStatus.SUCCEEDED, "app success", "");
+    } else {
+      rmClient.unregisterApplicationMaster(FinalApplicationStatus.FAILED, "app fail", "");
+    }
+  }
+
+  private boolean waitJobFinished() throws IOException, YarnException, InterruptedException {
     this.successWorkerNum = 0;
     float deltaResponse = 1.0f / totalWorkerNum;
     float responseId = 0.01f;
     while (successWorkerNum < totalWorkerNum) {
       this.processResponse(rmClient.allocate(responseId).getCompletedContainersStatuses());
       responseId = deltaResponse * successWorkerNum;
-      Thread.sleep(100);
+      Thread.sleep(1000);
+      LOG.info("successWorkerNum:{}", successWorkerNum);
+      if ((failWorkerNum / (float) totalWorkerNum) > 0.75f) {
+        return false;
+      }
     }
+    LOG.info("job finished!");
+    return true;
   }
 
   private void processResponse(List<ContainerStatus> completedContainersStatuses) {
@@ -143,11 +165,15 @@ public class YarnScheduler extends BaseScheduler {
       ContainerId cid = cs.getContainerId();
       if (cs.getExitStatus() == 0) {
         // only worker has exit 0
-        successWorkerNum += 1;
-        yarnResourceAlloctor.removeContainer("worker", cid);
+        YarnContainerInfo cinfo = yarnResourceAlloctor.getContainerInfo(cid);
+        if (cinfo.getType().equals("worker")) {
+          successWorkerNum += 1;
+        }
+        yarnResourceAlloctor.removeContainer(cid);
         rmClient.releaseAssignedContainer(cid);
       } else {
         yarnResourceAlloctor.failContainer(cid);
+        failWorkerNum += 1;
       }
     }
   }
@@ -181,24 +207,21 @@ public class YarnScheduler extends BaseScheduler {
    */
   private void initResources() throws IOException {
     FileSystem fs = FileSystem.get(conf);
+
+    if (StringUtils.isNotEmpty(jobConfig.env) && (
+        jobConfig.env.startsWith("viewfs://") ||
+            jobConfig.env.startsWith("hdfs://")
+    )
+    ) {
+      JobUtils.setResourceByPath(localResources, new Path(jobConfig.env), Constants.ENV_DIR, conf);
+    }
+
     FileStatus[] localResArr = fs.listStatus(new Path(appBasePath));
     for (FileStatus localRes : localResArr) {
       if (localRes.isFile()) {
         Path lrpath = localRes.getPath();
-        LOG.info("name:{}, container res:{} {}", lrpath.getName(), lrpath.toString());
-        LocalResource lr = Records.newRecord(LocalResource.class);
-        lr.setResource(JobUtils.fromURI(localRes.getPath().toUri(), conf));
-        lr.setSize(localRes.getLen());
-        lr.setTimestamp(localRes.getModificationTime());
-        if (lrpath.getName().endsWith(".tar") || lrpath.getName().endsWith(".gz")) {
-          lr.setType(LocalResourceType.ARCHIVE);
-        } else {
-          lr.setType(LocalResourceType.FILE);
-        }
-        lr.setVisibility(LocalResourceVisibility.PUBLIC);
-        localResources.put(lrpath.getName(), lr);
+        JobUtils.setResourceByPath(localResources, lrpath, null, conf);
       }
-
     }
     fs.close();
   }

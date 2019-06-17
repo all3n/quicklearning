@@ -5,14 +5,15 @@ import com.devhc.quicklearning.apps.xdl.XdlApp;
 import com.devhc.quicklearning.controllers.IndexController;
 import com.devhc.quicklearning.scheduler.BaseScheduler;
 import com.devhc.quicklearning.scheduler.LocalScheduler;
-import com.devhc.quicklearning.scheduler.YarnScheduler;
+import com.devhc.quicklearning.scheduler.yarn.YarnScheduler;
 import com.devhc.quicklearning.server.jersey.JerseyModule;
 import com.devhc.quicklearning.server.jersey.configuration.JerseyConfiguration;
 import com.devhc.quicklearning.server.rpc.RpcModule;
 import com.devhc.quicklearning.server.rpc.RpcServerConfig;
+import com.devhc.quicklearning.utils.ConfigUtils;
+import com.devhc.quicklearning.utils.JobConfigJson;
 import com.devhc.quicklearning.utils.JobUtils;
 import com.google.inject.AbstractModule;
-import javax.lang.model.type.UnknownTypeException;
 
 public class AppMasterModules extends AbstractModule {
 
@@ -27,6 +28,7 @@ public class AppMasterModules extends AbstractModule {
   protected void configure() {
     install(new AppServletModule());
     bind(MasterArgs.class).toInstance(masterArgs);
+    bind(JobConfigJson.class).toInstance(ConfigUtils.parseJson(masterArgs.getConfigFile(), JobConfigJson.class));
 
 
     // config rest web jersey server
@@ -49,7 +51,8 @@ public class AppMasterModules extends AbstractModule {
     install(new RpcModule(rpcServerConfig, new AppRpcServerImpl()));
 
     if(masterArgs.getAppType().equals("xdl")){
-      bind(BaseApp.class).toInstance(new XdlApp(masterArgs.getConfigFile()));
+      bind(BaseApp.class).to(XdlApp.class);
+          //.toInstance(new XdlApp(masterArgs.getConfigFile()));
     }else{
 //      throw new RuntimeException(masterArgs.getAppType()+" is not support");
     }

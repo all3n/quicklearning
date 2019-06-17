@@ -9,19 +9,25 @@ public class ClientArgs {
   private String type = "xdl";
 
   @Option(name = "-q", aliases = "--queue", usage = "queue")
-  private String queue = "default";
+  private String queue;
 
 
   @Option(name = "-c", aliases = "--config", usage = "job config")
   private String config = "config.json";
 
-  @Option(name = "-e", aliases = "--env", usage = "env")
-  private String envFile = "../ql.tar.gz";
+  @Option(name = "-ff", aliases = "--frameworkFile", usage = "framework archive")
+  private String frameworkFile;
 
 
   @Option(name = "-n", aliases = "--name", usage = "job name")
-  private String jobName = "quicklearning test";
+  private String jobName;
 
   @Option(name = "-d", aliases = "--deps", usage = "dep dirs")
-  private String deps = ".";
+  private String deps;
+
+  @Option(name = "-w", aliases = "--workspace", usage = "workspace")
+  private String workspace = ".";
+
+  @Option(name = "-clean", aliases = "--clean", usage = "clean at exit")
+  private boolean cleanAndExit = true;
 }

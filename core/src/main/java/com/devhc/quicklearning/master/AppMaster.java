@@ -4,6 +4,7 @@ import com.devhc.quicklearning.apps.BaseApp;
 import com.devhc.quicklearning.scheduler.BaseScheduler;
 import com.devhc.quicklearning.server.WebServer;
 import com.devhc.quicklearning.server.rpc.RpcServer;
+import com.devhc.quicklearning.utils.JobConfigJson;
 import com.google.common.collect.Lists;
 import com.google.inject.Guice;
 import com.google.inject.Module;
@@ -33,6 +34,9 @@ public class AppMaster {
   @Inject
   BaseApp app;
 
+  @Inject
+  JobConfigJson jobConfig;
+
 
   @Inject
   public AppMaster(MasterArgs args, BaseScheduler scheduler) throws Exception {
@@ -54,10 +58,8 @@ public class AppMaster {
     LOG.info("web listen {}:{}", webServer.getHost(), webServer.getPort());
     rpcServer.start();
 
-    scheduler.start();
-//    webServer.join();
-    LOG.info("---------------");
-
+    boolean res = scheduler.start();
+//    this.stop();
   }
 
 

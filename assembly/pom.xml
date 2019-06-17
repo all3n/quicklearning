@@ -32,7 +32,7 @@
                         <descriptor>src/main/assembly/${deploy.app}.xml</descriptor>
                     </descriptors>
                     <outputDirectory>${project.parent.basedir}/target</outputDirectory>
-                    <finalName>${deploy.app}-assembly-${project.parent.version}</finalName>
+                    <finalName>${project.parent.artifactId}-assembly-${project.parent.version}</finalName>
                 </configuration>
                 <executions>
                     <execution>

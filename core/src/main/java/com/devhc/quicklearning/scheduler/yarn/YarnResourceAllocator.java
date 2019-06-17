@@ -5,9 +5,13 @@ import com.devhc.quicklearning.apps.AppResource;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.IOException;
+import java.io.InvalidObjectException;
+import java.security.InvalidKeyException;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import lombok.Builder;
+import lombok.Data;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateResponse;
 import org.apache.hadoop.yarn.api.records.Container;
@@ -24,9 +28,18 @@ import org.slf4j.LoggerFactory;
 /**
  * used for
  * alloc containers from yarn resource manager
+ *
  * @author wanghuacheng
  */
 public class YarnResourceAllocator {
+
+  @Data
+  @Builder
+  public static class YarnContainerInfo {
+
+    private int index;
+    private String type;
+  }
 
   private Logger LOG = LoggerFactory.getLogger(YarnResourceAllocator.class);
   private int priority = 0;
@@ -34,7 +47,7 @@ public class YarnResourceAllocator {
   private long maxFailWaitSecs = 10 * 60;
   private AMRMClient<ContainerRequest> rmClient;
   private Map<String, Container[]> appAllocContainers = Maps.newHashMap();
-  private Map<String, Map<ContainerId, Integer>> containerIdx = Maps.newHashMap();
+  private Map<ContainerId, YarnContainerInfo> containerInfoMap = Maps.newHashMap();
   private Resource maxResourceLimit;
 
   public void initAllocator(List<AppJob> appJobList)
@@ -44,6 +57,7 @@ public class YarnResourceAllocator {
       allocAppContainers(appJob);
       priority++;
     }
+    LOG.info("appAllocContainers:{} containerInfoMap:{}", appAllocContainers, containerInfoMap);
 
 
   }
@@ -69,11 +83,11 @@ public class YarnResourceAllocator {
       LOG.info("finish {} {} container", appJob.getType(), allocFinished);
 
       if (allocFinished >= num) {
-        Map<ContainerId, Integer> containerTypeIdx = Maps.newHashMap();
         Container[] appAllocContainerArr = new Container[num];
         for (int i = 0; i < allocFinished; i++) {
           if (i < num) {
-            containerTypeIdx.put(allocContainers.get(i).getId(), i);
+            containerInfoMap.put(allocContainers.get(i).getId(), YarnContainerInfo.builder().
+                index(i).type(appJob.getType()).build());
             appAllocContainerArr[i] = allocContainers.get(i);
           } else {
             ContainerId cid = allocContainers.get(allocFinished - i - 1).getId();
@@ -81,7 +95,6 @@ public class YarnResourceAllocator {
             LOG.info("release redundance container {}", cid);
           }
         }
-        containerIdx.put(appJob.getType(),containerTypeIdx);
         this.appAllocContainers.put(appJob.getType(), appAllocContainerArr);
       }
 
@@ -97,10 +110,10 @@ public class YarnResourceAllocator {
     }
   }
 
-  public Container getContainer(String type, int i){
-    if(appAllocContainers.containsKey(type)){
+  public Container getContainer(String type, int i) {
+    if (appAllocContainers.containsKey(type)) {
       Container[] containers = appAllocContainers.get(type);
-      if(i < containers.length){
+      if (i < containers.length) {
         return containers[i];
       }
     }
@@ -108,13 +121,23 @@ public class YarnResourceAllocator {
   }
 
 
-  public void removeContainer(String type,ContainerId cid){
-    if(containerIdx.containsKey(type) && appAllocContainers.containsKey(type)){
-      Integer idx = containerIdx.get(type).get(cid);
-      Container c = appAllocContainers.get(type)[idx];
-      LOG.info("remove {}", c);
-      appAllocContainers.get(type)[idx] = null;
+  public Container removeContainer(ContainerId cid) {
+    if (containerInfoMap.containsKey(cid)){
+      YarnContainerInfo cinfo = containerInfoMap.get(cid);
+      if (cinfo != null) {
+        Container c = appAllocContainers.get(cinfo.getType())[cinfo.getIndex()];
+        LOG.info("remove {}", c);
+        appAllocContainers.get(cinfo.getType())[cinfo.getIndex()] = null;
+        return c;
+      }
     }
+    return null;
+  }
+
+
+
+  public YarnContainerInfo getContainerInfo(ContainerId cid){
+    return containerInfoMap.get(cid);
   }
 
   public Resource convertAppResource(AppResource appRes) {
@@ -147,25 +170,11 @@ public class YarnResourceAllocator {
   }
 
 
-
-
-
   public void failContainer(ContainerId cid) {
-    String type = "";
-    Integer idx = 0;
-    for(Entry<String,Map<ContainerId,Integer>> idxMap:containerIdx.entrySet()){
-      if(idxMap.getValue().containsKey(cid)){
-        type = idxMap.getKey();
-        idx = idxMap.getValue().get(cid);
-        break;
-      }
-    }
-    if(StringUtils.isEmpty(type)){
-      return;
-    }
+    YarnContainerInfo cinfo = containerInfoMap.get(cid);
 
-    Container failContainer = appAllocContainers.get(type)[idx];
+    Container failContainer = appAllocContainers.get(cinfo.getType())[cinfo.getIndex()];
     LOG.info("container fail : {}", failContainer);
-    appAllocContainers.get(type)[idx] = null;
+    appAllocContainers.get(cinfo.getType())[cinfo.getIndex()] = null;
   }
 }

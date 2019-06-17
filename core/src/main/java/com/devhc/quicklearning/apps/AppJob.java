@@ -11,5 +11,6 @@ public class AppJob {
   private AppResource resource;
   private String name;
   private String type;
+  private String entry;
   private boolean isWorker;
 }

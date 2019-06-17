@@ -3,8 +3,9 @@ package com.devhc.quicklearning.scheduler;
 public class LocalScheduler extends BaseScheduler{
 
   @Override
-  public void start() throws Exception {
+  public boolean start() throws Exception {
 
+    return false;
   }
 
   @Override

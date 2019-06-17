@@ -4,15 +4,19 @@ import static com.devhc.quicklearning.utils.JobUtils.TEMP_PERM;
 
 import com.devhc.quicklearning.conf.QuickLearningConf;
 import com.devhc.quicklearning.master.AppMaster;
+import com.devhc.quicklearning.utils.ConfigUtils;
 import com.devhc.quicklearning.utils.Constants;
+import com.devhc.quicklearning.utils.JobConfigJson;
 import com.devhc.quicklearning.utils.JobUtils;
 import com.google.common.collect.Lists;
 import com.google.inject.Guice;
 import com.google.inject.Module;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -20,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -42,12 +47,14 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.Apps;
 import org.apache.hadoop.yarn.util.Records;
+import org.mortbay.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Client {
 
   private final String localTmpDir;
+  private final JobConfigJson jobConfig;
   private Logger LOG = LoggerFactory.getLogger(Client.class);
 
   private final String user;
@@ -61,6 +68,8 @@ public class Client {
   private ApplicationSubmissionContext ctx;
   private FileSystem fs;
   private String appBasePath;
+  private String workspaceDistFile;
+  private String frameworkHdfs;
 
   @Inject
   public Client(ClientArgs args) {
@@ -68,7 +77,10 @@ public class Client {
     LOG.info("args {}", args);
     user = JobUtils.getCurUser();
     this.localTmpDir = createLocalTmpDir(user);
-    this.dependentFiles.addAll(JobUtils.splitString(args.getDeps(), ","));
+    if (StringUtils.isNotEmpty(args.getDeps())) {
+      this.dependentFiles.addAll(JobUtils.splitString(args.getDeps(), ","));
+    }
+    this.jobConfig = ConfigUtils.parseJson(args.getConfig(), JobConfigJson.class);
   }
 
   private void shutdown() {
@@ -79,6 +91,12 @@ public class Client {
           || state == YarnApplicationState.SUBMITTED) {
         LOG.info("kill applicationId:{}", appId);
         yarnClient.killApplication(appId);
+      }
+
+      if (args.isCleanAndExit()) {
+        FileSystem fs = FileSystem.get(conf);
+        fs.delete(new Path(this.appBasePath), true);
+        fs.close();
       }
     } catch (YarnException e) {
       e.printStackTrace();
@@ -155,47 +173,34 @@ public class Client {
   }
 
 
-  private void setupResource(Path resourcePath, LocalResource localResource) throws IOException {
-    FileStatus fileStatus;
-    fileStatus = fs.getFileStatus(resourcePath);
-
-    localResource.setResource(JobUtils.fromURI(resourcePath.toUri(), null));
-    localResource.setSize(fileStatus.getLen());
-    localResource.setTimestamp(fileStatus.getModificationTime());
-    if(resourcePath.getName().endsWith(".gz") && resourcePath.getName().endsWith(".tar")){
-      localResource.setType(LocalResourceType.ARCHIVE);
-    }else{
-      localResource.setType(LocalResourceType.FILE);
-    }
-    localResource.setVisibility(LocalResourceVisibility.PUBLIC);
-  }
-
   private Map<String, LocalResource> setupResourceMap() throws IOException {
-    FileSystem fs = FileSystem.get(conf);
     Map<String, LocalResource> resourceMap = new HashMap<String, LocalResource>();
-//    for (String file : this.dependentFiles) {
-////      if (file.endsWith(".jar")) {
-//      String fileName = JobUtils.getName(file);
-//      LocalResource defConf = Records.newRecord(LocalResource.class);
-//      setupResource(new Path(this.appBasePath + fileName), defConf);
-//      resourceMap.put(fileName, defConf);
-////      }
-//    }
     setResource(resourceMap, args.getConfig());
-    setResource(resourceMap, args.getEnvFile());
-    setResource(resourceMap, "bin/"+Constants.YARN_START_SCRIPT);
+    setResource(resourceMap, frameworkHdfs, Constants.QUICK_LEARNING_DIR);
+    setResource(resourceMap, workspaceDistFile, Constants.APP_DIR);
+    if (StringUtils.isNotEmpty(jobConfig.env)) {
+      setResource(resourceMap, jobConfig.env, Constants.ENV_DIR);
+    }
 
     return resourceMap;
   }
 
   private void setResource(Map<String, LocalResource> resourceMap, String file) throws IOException {
+    setResource(resourceMap, file, null);
+  }
+
+  private void setResource(Map<String, LocalResource> resourceMap, String file, String aliasName)
+      throws IOException {
     {
+      LOG.info("set resource file:{} alias:{}", file, aliasName);
       String fileName = JobUtils.getName(file);
-      LocalResource localRes = Records.newRecord(LocalResource.class);
-      Path filePath = new Path(this.appBasePath + fileName);
-      setupResource(filePath, localRes);
-      resourceMap.put(fileName, localRes);
-      fs.setPermission(filePath, TEMP_PERM);
+      Path resourcePath;
+      if (file.startsWith("viewfs") || file.startsWith("hdfs")) {
+        resourcePath = new Path(file);
+      } else {
+        resourcePath = new Path(this.appBasePath + fileName);
+      }
+      JobUtils.setResourceByPath(resourceMap, resourcePath, aliasName, conf);
     }
   }
 
@@ -203,11 +208,17 @@ public class Client {
   private void uploadDependentFiles(String basePath, ArrayList<String> dependentFileList)
       throws IOException {
     uploadLocalFileToHdfs(args.getConfig(), basePath);
-    uploadLocalFileToHdfs(args.getEnvFile(), basePath);
-    uploadLocalFileToHdfs("bin/"+Constants.YARN_START_SCRIPT, basePath);
-//    if (dependentFileList != null) {
-//      uploadFilesToHdfs(dependentFileList, basePath);
-//    }
+    this.frameworkHdfs = uploadLocalFileToHdfs(args.getFrameworkFile(), basePath,
+        Constants.QUICK_LEARNING_DIR);
+    if (StringUtils.isNotEmpty(jobConfig.env) && jobConfig.env.startsWith("/")) {
+      uploadLocalFileToHdfs(jobConfig.env, basePath);
+    }
+
+    this.workspaceDistFile = uploadLocalFileToHdfs(args.getWorkspace(), basePath,
+        Constants.APP_DIR);
+    if (dependentFileList != null) {
+      uploadFilesToHdfs(dependentFileList, basePath);
+    }
     LOG.info("Upload user files success.");
   }
 
@@ -222,6 +233,11 @@ public class Client {
   }
 
   private String uploadLocalFileToHdfs(String srcFilePath, String dstHdfsDir) throws IOException {
+    return uploadLocalFileToHdfs(srcFilePath, dstHdfsDir, null);
+  }
+
+  private String uploadLocalFileToHdfs(String srcFilePath, String dstHdfsDir, String alias)
+      throws IOException {
     FileSystem fs = FileSystem.get(conf);
     File srcFile = new File(srcFilePath);
     if (srcFile.isDirectory()) {
@@ -229,10 +245,11 @@ public class Client {
         java.nio.file.Path actualPath = Files.readSymbolicLink(srcFile.toPath());
         srcFile = actualPath.toFile();
       }
-      String fileName = srcFile.getName();
-      String dirName = srcFile.getParentFile().getAbsolutePath();
+
+      String fileName = StringUtils.isNotEmpty(alias) ? alias : srcFile.getName();
+      String dirName = srcFile.getAbsolutePath();
       String tarFileName = String.format("%s/%s.tar.gz", this.localTmpDir, fileName);
-      JobUtils.runCmd(String.format("tar -czf %s -C %s ./%s", tarFileName, dirName, fileName));
+      JobUtils.runCmd(String.format("tar -czf %s -C %s .", tarFileName, dirName, "."));
 //      if (!volumes.isEmpty()) {
 //        volumes += Constants.OPTION_VALUE_SEPARATOR;
 //      }
@@ -260,12 +277,15 @@ public class Client {
     this.ctx = app.getApplicationSubmissionContext();
     this.appId = res.getApplicationId();
     this.appBasePath = JobUtils.genAppBasePath(conf, appId.toString(), user);
+    //
     uploadDependentFiles(appBasePath, this.dependentFiles);
-
     Map<String, LocalResource> resourceMap = setupResourceMap();
+
     String appMasterClazz = AppMaster.class.getName();
-    String amStartCommand = "bash "+ Constants.YARN_START_SCRIPT+" " + appMasterClazz +
-        " -w public -s yarn  -t=" + args.getType() + "  1>"
+    String amStartCommand = "bash " + Constants.QUICK_LEARNING_DIR
+        + "/bin/" + Constants.YARN_START_SCRIPT + " " + appMasterClazz +
+        " -w " + Environment.PWD.$$() + "/" + Constants.QUICK_LEARNING_DIR +
+        "/public -s yarn  -t=" + args.getType() + "  1>"
         + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stdout"
         + " 2>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stderr";
 
@@ -278,11 +298,20 @@ public class Client {
     capability.setVirtualCores(1);
 
     ctx.setApplicationType(args.getType());
-    ctx.setApplicationName(args.getJobName());
+    if (StringUtils.isNotEmpty(args.getJobName())) {
+      ctx.setApplicationName(args.getJobName());
+    } else if (StringUtils.isNotEmpty(jobConfig.job_name)) {
+      ctx.setApplicationName(jobConfig.job_name);
+    } else {
+      throw new InvalidParameterException("job name must be set by param or config");
+    }
     ctx.setAMContainerSpec(amContainer);
     ctx.setResource(capability);
-    ctx.setQueue(args.getQueue());
-
+    if (StringUtils.isNotEmpty(args.getQueue())) {
+      ctx.setQueue(args.getQueue());
+    } else if (StringUtils.isNotEmpty(jobConfig.scheduler_queue)) {
+      ctx.setQueue(jobConfig.scheduler_queue);
+    }
   }
 
   private void initYarnClient() throws IOException {

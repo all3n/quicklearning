@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
-export APP_DIR=`cd "$(dirname $0)/"; pwd`
 env
 echo "---------------------------------------------------"
 ls -aRl
 echo "---------------------------------------------------"
-tar -zxvf $APP_DIR/ql.tar.gz
+ENV_DIR=$PWD/quicklearning
 ls -aRl
 
-WEB_DIR=$APP_DIR/public
+WEB_DIR=$ENV_DIR/public
 BASE_PATH="{APP_BASE_URL}"
 
 if [[ -n $APPLICATION_WEB_PROXY_BASE ]];then
@@ -15,7 +14,7 @@ if [[ -n $APPLICATION_WEB_PROXY_BASE ]];then
 fi
 
 
-CLASSPATH=$APP_DIR/conf/:$APP_DIR/*:$CLASSPATH
+CLASSPATH=$ENV_DIR/conf/:$ENV_DIR/*:$CLASSPATH
 $JAVA_HOME/bin/java \
   -cp $CLASSPATH "$@"
 
