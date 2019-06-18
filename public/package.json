@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve",
+    "serve": "vue-cli-service serve --watch",
     "build": "vue-cli-service build --mode production",
     "prod-build": "vue-cli-service build --mode production",
     "dev-build": "vue-cli-service build --mode development",
@@ -11,7 +11,11 @@
   },
   "dependencies": {
     "core-js": "^2.6.5",
-    "vue": "^2.6.10"
+    "vue": "^2.6.10",
+    "vuex": "3.1.1",
+    "vue-router": "3.0.6",
+    "element-ui": "^2.9.1",
+    "axios": "0.18.0"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.8.0",
@@ -20,7 +24,9 @@
     "babel-eslint": "^10.0.1",
     "eslint": "^5.16.0",
     "eslint-plugin-vue": "^5.0.0",
-    "vue-template-compiler": "^2.6.10"
+    "vue-template-compiler": "^2.6.10",
+    "sass-loader": "7.0.3",
+    "node-sass": "^4.7.2"
   },
   "eslintConfig": {
     "root": true,

@@ -23,4 +23,7 @@ public class MasterArgs {
 
   @Option(name="-b", aliases = "--basepath", usage = "base hdfs path")
   private String basePath;
+
+  @Option(name="-saf", aliases = "--stopAtFinished", usage = "stopAtFinished")
+  private int stopAtFinished = 1;
 }

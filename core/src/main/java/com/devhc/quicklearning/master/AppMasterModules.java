@@ -29,7 +29,11 @@ public class AppMasterModules extends AbstractModule {
     install(new AppServletModule());
     bind(MasterArgs.class).toInstance(masterArgs);
     bind(JobConfigJson.class).toInstance(ConfigUtils.parseJson(masterArgs.getConfigFile(), JobConfigJson.class));
-
+    if(masterArgs.getAppType().equals("xdl")){
+      bind(BaseApp.class).to(XdlApp.class);
+    }else{
+//      throw new RuntimeException(masterArgs.getAppType()+" is not support");
+    }
 
     // config rest web jersey server
     JerseyConfiguration configuration = JerseyConfiguration.builder()
@@ -50,12 +54,7 @@ public class AppMasterModules extends AbstractModule {
 
     install(new RpcModule(rpcServerConfig, new AppRpcServerImpl()));
 
-    if(masterArgs.getAppType().equals("xdl")){
-      bind(BaseApp.class).to(XdlApp.class);
-          //.toInstance(new XdlApp(masterArgs.getConfigFile()));
-    }else{
-//      throw new RuntimeException(masterArgs.getAppType()+" is not support");
-    }
+
 
     if (masterArgs.getScheduler().equals("yarn")) {
       bind(BaseScheduler.class).to(YarnScheduler.class);

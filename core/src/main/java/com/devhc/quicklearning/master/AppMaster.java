@@ -59,7 +59,9 @@ public class AppMaster {
     rpcServer.start();
 
     boolean res = scheduler.start();
-//    this.stop();
+    if (args.getStopAtFinished() == 1) {
+      this.stop();
+    }
   }
 
 

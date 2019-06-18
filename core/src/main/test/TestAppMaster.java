@@ -8,7 +8,7 @@ public class TestAppMaster {
     String appDir = new File(".").getCanonicalPath();
     String webDir = appDir + "/" + "public/dist";
     AppMaster.main(new String[]{
-        "-w", webDir, "-p", "33333"
+        "-w", webDir, "-p", "33333", "-c", appDir + "/test/test.json", "--stopAtFinished", "0"
     });
   }
 }

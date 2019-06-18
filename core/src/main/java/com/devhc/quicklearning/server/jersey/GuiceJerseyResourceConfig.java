@@ -2,7 +2,6 @@ package com.devhc.quicklearning.server.jersey;
 
 import com.devhc.quicklearning.server.jersey.configuration.JerseyConfiguration;
 import com.google.inject.Injector;
-import javax.ws.rs.ApplicationPath;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.jvnet.hk2.guice.bridge.api.GuiceBridge;
@@ -22,6 +21,8 @@ public class GuiceJerseyResourceConfig extends ResourceConfig {
         GuiceBridge.getGuiceBridge().initializeGuiceBridge(serviceLocator);
         GuiceIntoHK2Bridge guiceBridge = serviceLocator.getService(GuiceIntoHK2Bridge.class);
         guiceBridge.bridgeGuiceInjector(injector);
+
+
     }
 
     private static ResourceConfig getResourceConfigFromGuice(ServletContext servletContext) {

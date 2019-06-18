@@ -4,7 +4,6 @@ import com.devhc.quicklearning.apps.AppJob;
 import com.devhc.quicklearning.apps.AppResource;
 import com.devhc.quicklearning.apps.BaseApp;
 import com.devhc.quicklearning.master.MasterArgs;
-import com.devhc.quicklearning.utils.ConfigUtils;
 import com.devhc.quicklearning.utils.Constants;
 import com.devhc.quicklearning.utils.JobConfigJson;
 import com.devhc.quicklearning.utils.JobConfigJson.RoleResource;
@@ -37,6 +36,12 @@ public class XdlApp extends BaseApp {
     this.conf = conf;
     intAppContainers();
   }
+
+
+
+
+
+
 
   private void intAppContainers() {
     this.appJobs = Lists.newArrayList();
@@ -74,7 +79,7 @@ public class XdlApp extends BaseApp {
 
       appJobs.add(workerContainer);
     } else {
-      throw new RuntimeException("conf must has jobs, jobs must has ps and worker");
+      throw new RuntimeException("conf must has jobs, jobs must has  worker");
     }
   }
 
@@ -89,6 +94,11 @@ public class XdlApp extends BaseApp {
         job.getType(),
         config,
         zkRoot, zkConnectStr, volumes, port, args, job.getEntry()) + " " + suffix;
+  }
+
+  @Override
+  public JobConfigJson getConfig() {
+    return conf;
   }
 
 
