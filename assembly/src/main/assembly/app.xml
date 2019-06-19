@@ -22,10 +22,12 @@
       <fileMode>0755</fileMode>
       <directory>${project.parent.basedir}/scripts</directory>
     </fileSet>
+    <!--
     <fileSet>
       <outputDirectory>/libs</outputDirectory>
       <directory>${project.parent.basedir}/core/target/libs</directory>
     </fileSet>
+    -->
     <fileSet>
       <outputDirectory>/conf</outputDirectory>
       <directory>${project.parent.basedir}/conf</directory>

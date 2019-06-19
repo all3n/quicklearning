@@ -1,14 +1,20 @@
-import request from '@/utils/request';
-function get_job_info(url, params){
-    console.log("call get job info");
+import request from '@/utils/request'
+
+function get_job_info(){
     return request({
-        url: url,
-        method: 'get',
-        params
+        url: '/job/info',
+        method: 'get'
     })
 }
 
 
-export default{
-    get_job_info
+function get_job_containers(){
+    return request({
+        url: '/job/containers',
+        method: 'get'
+    })
+}
+export default {
+    get_job_info,
+    get_job_containers
 }

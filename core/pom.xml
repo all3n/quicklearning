@@ -15,7 +15,6 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <hadoop.version>2.6.0</hadoop.version>
-    <hadoop.scope>provided</hadoop.scope>
     <jackson.version>2.9.9</jackson.version>
     <jetty.version>9.4.18.v20190429</jetty.version>
     <guice.version>4.2.2</guice.version>
@@ -24,6 +23,7 @@
     <guava.version>22.0</guava.version>
     <grpc.version>1.16.0</grpc.version>
     <boringssl.version>2.0.17.Final</boringssl.version>
+    <hadoop.scope>provided</hadoop.scope>
   </properties>
 
   <dependencies>
@@ -36,6 +36,18 @@
       <exclusions>
         <exclusion>
           <groupId>com.google.protobuf</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-yarn-common</artifactId>
+      <version>${hadoop.version}</version>
+      <scope>${hadoop.scope}</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
           <artifactId>*</artifactId>
         </exclusion>
       </exclusions>
@@ -94,8 +106,6 @@
     </dependency>
 
 
-
-
     <!-- jetty -->
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
@@ -114,7 +124,6 @@
     </dependency>
 
     <!-- jersey -->
-
 
 
     <dependency>
@@ -139,8 +148,6 @@
     </dependency>
 
 
-
-
     <dependency>
       <groupId>com.google.inject</groupId>
       <artifactId>guice</artifactId>
@@ -157,7 +164,6 @@
       <version>4.12</version>
       <scope>test</scope>
     </dependency>
-
 
 
     <dependency>
@@ -203,6 +209,42 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-dependencies</id>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <phase>prepare-package</phase>
+            <configuration>
+              <outputDirectory>${project.build.directory}/libs</outputDirectory>
+              <includeScope>runtime</includeScope>
+              <excludeScope>test</excludeScope>
+              <overWriteReleases>false</overWriteReleases>
+              <overWriteSnapshots>false</overWriteSnapshots>
+              <overWriteIfNewer>true</overWriteIfNewer>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-dependencies-provided</id>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <phase>prepare-package</phase>
+            <configuration>
+              <outputDirectory>${project.build.directory}/provided-libs</outputDirectory>
+              <includeScope>provided</includeScope>
+              <excludeScope>test</excludeScope>
+              <overWriteReleases>false</overWriteReleases>
+              <overWriteSnapshots>false</overWriteSnapshots>
+              <overWriteIfNewer>true</overWriteIfNewer>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
         <executions>
           <execution>
@@ -212,6 +254,12 @@
             <phase>package</phase>
             <configuration>
               <createDependencyReducedPom>false</createDependencyReducedPom>
+              <artifactSet>
+                <excludes>
+                  <!-- exclude jackson 1-->
+                  <exclude>org.codehaus.jackson:*</exclude>
+                </excludes>
+              </artifactSet>
               <filters>
                 <filter>
                   <artifact>*:*</artifact>
@@ -262,7 +310,8 @@
         <artifactId>protobuf-maven-plugin</artifactId>
         <version>0.5.1</version>
         <configuration>
-          <protocArtifact>com.google.protobuf:protoc:3.0.0:exe:${os.detected.classifier}</protocArtifact>
+          <protocArtifact>com.google.protobuf:protoc:3.0.0:exe:${os.detected.classifier}
+          </protocArtifact>
         </configuration>
         <executions>
           <execution>
@@ -282,7 +331,9 @@
             </goals>
             <configuration>
               <pluginId>grpc-java</pluginId>
-              <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}</pluginArtifact>
+              <pluginArtifact>
+                io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}
+              </pluginArtifact>
               <pluginParameter>lite</pluginParameter>
             </configuration>
           </execution>
@@ -304,7 +355,9 @@
         </executions>
         <configuration>
           <includes>
-              <include>${basedir}/target/generated-sources/protobuf/java/com/devhc/quicklearning/Msg.java</include>
+            <include>
+              ${basedir}/target/generated-sources/protobuf/java/com/devhc/quicklearning/Msg.java
+            </include>
           </includes>
           <replacements>
             <replacement>
@@ -335,12 +388,12 @@
         <artifactId>guice</artifactId>
         <version>${guice.version}</version>
       </dependency>
-       <dependency>
+      <dependency>
         <groupId>com.google.inject.extensions</groupId>
         <artifactId>guice-servlet</artifactId>
         <version>${guice.version}</version>
       </dependency>
-       <dependency>
+      <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
         <version>${guava.version}</version>

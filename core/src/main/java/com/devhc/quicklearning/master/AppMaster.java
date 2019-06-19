@@ -5,6 +5,7 @@ import com.devhc.quicklearning.scheduler.BaseScheduler;
 import com.devhc.quicklearning.server.WebServer;
 import com.devhc.quicklearning.server.rpc.RpcServer;
 import com.devhc.quicklearning.utils.JobConfigJson;
+import com.devhc.quicklearning.utils.JobUtils;
 import com.google.common.collect.Lists;
 import com.google.inject.Guice;
 import com.google.inject.Module;
@@ -31,7 +32,6 @@ public class AppMaster {
 
   BaseScheduler scheduler;
 
-  @Inject
   BaseApp app;
 
   @Inject
@@ -39,9 +39,11 @@ public class AppMaster {
 
 
   @Inject
-  public AppMaster(MasterArgs args, BaseScheduler scheduler) throws Exception {
+  public AppMaster(MasterArgs args, BaseApp app, BaseScheduler scheduler) throws Exception {
     this.args = args;
     this.scheduler = scheduler;
+    this.app = app;
+    app.setUser(JobUtils.getCurUser());
     LOG.info("master args:{}", args);
 
     try {

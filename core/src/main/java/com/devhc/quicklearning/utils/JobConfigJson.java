@@ -1,7 +1,9 @@
 package com.devhc.quicklearning.utils;
 
 import java.util.Map;
+import lombok.Data;
 
+@Data
 public class JobConfigJson {
 
   public String jobType;

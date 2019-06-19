@@ -1,5 +1,6 @@
 package com.devhc.quicklearning.scheduler;
 
+
 public abstract class BaseScheduler {
 
   public boolean start() throws Exception {

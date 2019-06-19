@@ -13,12 +13,11 @@ import com.devhc.quicklearning.utils.JobUtils;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
-import javax.security.auth.login.Configuration;
+import javax.inject.Singleton;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -33,8 +32,6 @@ import org.apache.hadoop.yarn.api.records.ContainerLaunchContext;
 import org.apache.hadoop.yarn.api.records.ContainerStatus;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.api.records.LocalResource;
-import org.apache.hadoop.yarn.api.records.LocalResourceType;
-import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import org.apache.hadoop.yarn.client.api.AMRMClient;
 import org.apache.hadoop.yarn.client.api.AMRMClient.ContainerRequest;
 import org.apache.hadoop.yarn.client.api.NMClient;
@@ -48,6 +45,9 @@ import org.slf4j.LoggerFactory;
 /**
  * @author wanghuacheng
  */
+
+
+@Singleton
 public class YarnScheduler extends BaseScheduler {
 
   private Logger LOG = LoggerFactory.getLogger(YarnScheduler.class);
@@ -67,17 +67,21 @@ public class YarnScheduler extends BaseScheduler {
   BaseApp app;
   @Inject
   JobConfigJson jobConfig;
+
   private YarnResourceAllocator yarnResourceAlloctor;
   private Map<String, String> appEnvs = Maps.newHashMap();
   private Map<String, LocalResource> localResources = Maps.newHashMap();
   private String appBasePath;
   private String cmdSuffix;
-  private int totalWorkerNum;
 
+  private int totalWorkerNum;
   private int totalFinishNum = 0;
   private int successWorkerNum = 0;
   private int failWorkerNum = 0;
 
+  public YarnResourceAllocator getYarnResourceAlloctor() {
+    return yarnResourceAlloctor;
+  }
 
   @Override
   public void init() throws Exception {
@@ -169,7 +173,7 @@ public class YarnScheduler extends BaseScheduler {
         if (cinfo.getType().equals("worker")) {
           successWorkerNum += 1;
         }
-        yarnResourceAlloctor.removeContainer(cid);
+        yarnResourceAlloctor.successContainer(cid);
         rmClient.releaseAssignedContainer(cid);
       } else {
         yarnResourceAlloctor.failContainer(cid);

@@ -13,4 +13,5 @@ public class AppJob {
   private String type;
   private String entry;
   private boolean isWorker;
+  private List<AppContainer> containers;
 }

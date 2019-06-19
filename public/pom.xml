@@ -14,7 +14,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <properties>
         <npm>npm</npm>
-        <env>dev</env>
+        <env>stage</env>
     </properties>
 
     <build>
@@ -57,7 +57,7 @@
                             <goal>npm</goal>
                         </goals>
                         <configuration>
-                            <arguments>run ${env}-build</arguments>
+                            <arguments>run build:${env}</arguments>
                         </configuration>
                     </execution>
 

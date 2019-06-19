@@ -1,61 +1,62 @@
 <template>
-  <JobInfoView v-bind:info="info" />
+  <div class="dashboard-container">
+    <h3>info</h3>
+    <ul>
+      <li v-for="(value, name, index) in info">{{ index}}:{{name}}:{{value}}</li>
+    </ul>
+    <h3>runningContainers</h3>
+    <ul>
+      <li v-for="(value, name, index) in containers.runningContainers">{{ index}}:{{name}}:{{value}}</li>
+    </ul>
+    <h3>finishContainers</h3>
+
+    <ul>
+      <li v-for="(value, name, index) in containers.finishContainers">{{ index}}:{{name}}:{{value}}</li>
+    </ul>
+  </div>
 </template>
 
-
 <script>
-import job_api from "@/api/job"
-import JobInfoView from '@/components/JobInfoView'
+import { mapGetters } from "vuex";
+import job_api from "@/api/job";
 
 export default {
-  name: "dashboardMain",
-  components: {
-      JobInfoView
-  },
-  data(){
-      return {
-          info: {}
-      }
-  },
+  name: "Dashboard",
+  props: ["info", "containers"],
   created() {
-    console.log('dashboard created!')
-    this.init()
+    this.init();
+  },
+  computed: {
+    ...mapGetters(["name"])
   },
   methods: {
     init() {
       job_api
-        .get_job_info('/api/job_info', {})
+        .get_job_info()
         .then(res => {
-          var job_info = res.data
-          var info =  {};
-          var jobs = [];
-
-          
-          for(var jt in job_info.jobs){
-            jobs.push({'jobType': jt, 'info': job_info.jobs[jt]});
-          }
-
-          var basic_info = []
-          for(var k in job_info){
-            if(k != "jobs"){
-              basic_info.push({"name": k, "value": job_info[k]})
-            }
-          }
-
-          info['jobs'] = jobs
-          info['basic_info'] = basic_info
-
-          this.info = info;
+          console.log("success job info");
+          this.info = res.data;
         })
         .catch(err => {
-          console.log(err)
-        })
+          console.log("err:", err);
+        });
+
+      job_api.get_job_containers().then(res => {
+        this.containers = res.data;
+      });
     }
   }
-}
+};
 </script>
 
-<style lang="sass" scoped>
-
+<style lang="scss" scoped>
+.dashboard {
+  &-container {
+    margin: 30px;
+  }
+  &-text {
+    font-size: 30px;
+    line-height: 46px;
+  }
+}
 </style>
-

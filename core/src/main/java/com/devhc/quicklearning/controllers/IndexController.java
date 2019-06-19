@@ -2,7 +2,10 @@ package com.devhc.quicklearning.controllers;
 
 
 import com.devhc.quicklearning.apps.BaseApp;
+import com.devhc.quicklearning.beans.ApiResponse;
 import com.devhc.quicklearning.utils.JobConfigJson;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.ws.rs.GET;
@@ -26,13 +29,6 @@ public class IndexController {
   @Produces(MediaType.TEXT_PLAIN)
   public String index(){
     return "index";
-  }
-
-  @GET
-  @Path("/job_info")
-  @Produces(MediaType.APPLICATION_JSON)
-  public JobConfigJson jobInfo(){
-    return app.getConfig();
   }
 
 

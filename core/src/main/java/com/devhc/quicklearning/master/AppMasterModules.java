@@ -14,6 +14,7 @@ import com.devhc.quicklearning.utils.ConfigUtils;
 import com.devhc.quicklearning.utils.JobConfigJson;
 import com.devhc.quicklearning.utils.JobUtils;
 import com.google.inject.AbstractModule;
+import javax.inject.Singleton;
 
 public class AppMasterModules extends AbstractModule {
 
@@ -30,7 +31,7 @@ public class AppMasterModules extends AbstractModule {
     bind(MasterArgs.class).toInstance(masterArgs);
     bind(JobConfigJson.class).toInstance(ConfigUtils.parseJson(masterArgs.getConfigFile(), JobConfigJson.class));
     if(masterArgs.getAppType().equals("xdl")){
-      bind(BaseApp.class).to(XdlApp.class);
+      bind(BaseApp.class).to(XdlApp.class).in(Singleton.class);
     }else{
 //      throw new RuntimeException(masterArgs.getAppType()+" is not support");
     }
@@ -57,9 +58,9 @@ public class AppMasterModules extends AbstractModule {
 
 
     if (masterArgs.getScheduler().equals("yarn")) {
-      bind(BaseScheduler.class).to(YarnScheduler.class);
+      bind(BaseScheduler.class).to(YarnScheduler.class).in(Singleton.class);
     } else {
-      bind(BaseScheduler.class).to(LocalScheduler.class);
+      bind(BaseScheduler.class).to(LocalScheduler.class).in(Singleton.class);
     }
   }
 }

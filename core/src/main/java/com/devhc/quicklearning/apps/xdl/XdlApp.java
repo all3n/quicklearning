@@ -11,10 +11,12 @@ import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Singleton
 public class XdlApp extends BaseApp {
 
   private static Logger LOG = LoggerFactory.getLogger(XdlApp.class);
