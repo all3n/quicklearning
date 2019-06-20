@@ -60,22 +60,20 @@
                             <arguments>run build:${env}</arguments>
                         </configuration>
                     </execution>
+                    <execution>
+                        <phase>package</phase>
+                        <id>npm historyserver build</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>run build:historyserver</arguments>
+                        </configuration>
+                    </execution>
+
 
                 </executions>
             </plugin>
-            <plugin>
-                <artifactId>maven-clean-plugin</artifactId>
-                <version>3.1.0</version>
-                <configuration>
-                    <filesets>
-                        <fileset>
-                            <directory>dist</directory>
-                            <followSymlinks>false</followSymlinks>
-                        </fileset>
-                    </filesets>
-                </configuration>
-            </plugin>
-
         </plugins>
     </build>
 </project>

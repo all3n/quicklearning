@@ -14,7 +14,5 @@ public class ClientModules extends AbstractModule {
   @Override
   protected void configure() {
     bind(ClientArgs.class).toInstance(clientArgs);
-//    bind(Client.class).to(Client.class);
-
   }
 }

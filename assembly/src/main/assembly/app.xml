@@ -22,19 +22,17 @@
       <fileMode>0755</fileMode>
       <directory>${project.parent.basedir}/scripts</directory>
     </fileSet>
-    <!--
-    <fileSet>
-      <outputDirectory>/libs</outputDirectory>
-      <directory>${project.parent.basedir}/core/target/libs</directory>
-    </fileSet>
-    -->
     <fileSet>
       <outputDirectory>/conf</outputDirectory>
       <directory>${project.parent.basedir}/conf</directory>
     </fileSet>
     <fileSet>
-      <outputDirectory>/public</outputDirectory>
-      <directory>${project.parent.basedir}/public/dist</directory>
+        <outputDirectory>/web/appmaster</outputDirectory>
+      <directory>${project.parent.basedir}/public/target/appmaster</directory>
+    </fileSet>
+    <fileSet>
+        <outputDirectory>/web/historyserver</outputDirectory>
+      <directory>${project.parent.basedir}/public/target/historyserver</directory>
     </fileSet>
   </fileSets>
 </assembly>

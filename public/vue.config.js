@@ -7,6 +7,9 @@ function resolve(dir) {
 }
 
 const name = defaultSettings.title || 'quick learning' // page title
+
+const outputDir = 'target/' + (process.env.BUILD_APP || 'appmaster')
+const mainScript = process.env.BUILD_APP || 'main'
 // If your port is set to 80,
 // use administrator privileges to execute the command line.
 // For example, Mac: sudo npm run
@@ -25,10 +28,13 @@ module.exports = {
    */
   publicPath: IS_PROD ? '{APP_BASE_URL}/'
     : '/',
-  outputDir: 'dist',
+  outputDir: outputDir,
   assetsDir: 'static',
   lintOnSave: process.env.NODE_ENV === 'development',
   productionSourceMap: false,
+  pages: {
+    index: 'src/' + mainScript + '.js'
+  },
   devServer: {
     port: port,
     open: true,

@@ -43,6 +43,21 @@ public class JobUtils {
   }
 
 
+  public static String getCurUId() {
+    String uid = "";
+    try {
+      String curUser = getCurUser();
+      Process pr2 = Runtime.getRuntime().exec("id -u " + curUser);
+      BufferedReader input2 = new BufferedReader(new InputStreamReader(pr2.getInputStream()));
+      uid = StringUtils.strip(input2.readLine());
+      LOG.info("get current user " + curUser + " uid:" + uid);
+    } catch (Exception e) {
+      LOG.error(e.toString());
+    }
+    return uid;
+  }
+
+
   public static String genAppBasePath(
       Configuration conf, String appId, String user) throws IOException {
     String basePath = String.format("%s/%s/%s/%s",
@@ -62,7 +77,8 @@ public class JobUtils {
     return basePath;
   }
 
-  public static void setResourceByPath(Map<String, LocalResource> localResources, Path lrpath,String alias,
+  public static void setResourceByPath(Map<String, LocalResource> localResources, Path lrpath,
+      String alias,
       Configuration conf)
       throws IOException {
 //    Path lrpath = localRes.getPath();
@@ -89,9 +105,9 @@ public class JobUtils {
     } else {
       lr.setType(LocalResourceType.FILE);
     }
-    if(StringUtils.isNotEmpty(alias)){
+    if (StringUtils.isNotEmpty(alias)) {
       linkName = alias;
-    }else if(lr.getType() == LocalResourceType.ARCHIVE){
+    } else if (lr.getType() == LocalResourceType.ARCHIVE) {
       int dIndex = linkName.indexOf(".");
       linkName = linkName.substring(0, dIndex);
     }

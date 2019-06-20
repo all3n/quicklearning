@@ -260,3 +260,5 @@ tags
 # End of https://www.gitignore.io/api/vim,java,python,intellij+all
 package-lock.json
 node_modules
+
+/public/historyserver

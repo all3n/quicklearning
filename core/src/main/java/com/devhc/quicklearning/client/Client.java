@@ -1,7 +1,5 @@
 package com.devhc.quicklearning.client;
 
-import static com.devhc.quicklearning.utils.JobUtils.TEMP_PERM;
-
 import com.devhc.quicklearning.conf.QuickLearningConf;
 import com.devhc.quicklearning.master.AppMaster;
 import com.devhc.quicklearning.utils.ConfigUtils;
@@ -9,11 +7,11 @@ import com.devhc.quicklearning.utils.Constants;
 import com.devhc.quicklearning.utils.JobConfigJson;
 import com.devhc.quicklearning.utils.JobUtils;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.inject.Guice;
 import com.google.inject.Module;
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.InvalidParameterException;
@@ -24,8 +22,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
@@ -37,8 +35,6 @@ import org.apache.hadoop.yarn.api.records.ApplicationSubmissionContext;
 import org.apache.hadoop.yarn.api.records.ContainerLaunchContext;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.api.records.LocalResource;
-import org.apache.hadoop.yarn.api.records.LocalResourceType;
-import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
@@ -47,7 +43,6 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.Apps;
 import org.apache.hadoop.yarn.util.Records;
-import org.mortbay.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,6 +65,7 @@ public class Client {
   private String appBasePath;
   private String workspaceDistFile;
   private String frameworkHdfs;
+  private String frameworkLocal;
 
   @Inject
   public Client(ClientArgs args) {
@@ -77,8 +73,13 @@ public class Client {
     LOG.info("args {}", args);
     user = JobUtils.getCurUser();
     this.localTmpDir = createLocalTmpDir(user);
+    LOG.info("tmp:{}", localTmpDir);
     if (StringUtils.isNotEmpty(args.getDeps())) {
       this.dependentFiles.addAll(JobUtils.splitString(args.getDeps(), ","));
+    }
+    if (!(new File(args.getConfig())).exists()) {
+      LOG.error("{} not exists", args.getConfig());
+      System.exit(-1);
     }
     this.jobConfig = ConfigUtils.parseJson(args.getConfig(), JobConfigJson.class);
   }
@@ -97,6 +98,7 @@ public class Client {
         FileSystem fs = FileSystem.get(conf);
         fs.delete(new Path(this.appBasePath), true);
         fs.close();
+        FileUtils.deleteDirectory(new File(localTmpDir));
       }
     } catch (YarnException e) {
       e.printStackTrace();
@@ -208,7 +210,7 @@ public class Client {
   private void uploadDependentFiles(String basePath, ArrayList<String> dependentFileList)
       throws IOException {
     uploadLocalFileToHdfs(args.getConfig(), basePath);
-    this.frameworkHdfs = uploadLocalFileToHdfs(args.getFrameworkFile(), basePath,
+    this.frameworkHdfs = uploadLocalFileToHdfs(frameworkLocal, basePath,
         Constants.QUICK_LEARNING_DIR);
     if (StringUtils.isNotEmpty(jobConfig.env) && jobConfig.env.startsWith("/")) {
       uploadLocalFileToHdfs(jobConfig.env, basePath);
@@ -277,7 +279,12 @@ public class Client {
     this.ctx = app.getApplicationSubmissionContext();
     this.appId = res.getApplicationId();
     this.appBasePath = JobUtils.genAppBasePath(conf, appId.toString(), user);
-    //
+
+    this.frameworkLocal = this.localTmpDir + "/quicklearning" + System.currentTimeMillis();
+    File frameworkLocalDir = new File(frameworkLocal);
+    FileUtils.copyDirectory(new File(args.getFrameworkFile()), frameworkLocalDir);
+    replaceVars(frameworkLocalDir, "/\\{APP_BASE_URL\\}", "/proxy/" + appId.toString());
+
     uploadDependentFiles(appBasePath, this.dependentFiles);
     Map<String, LocalResource> resourceMap = setupResourceMap();
 
@@ -311,6 +318,20 @@ public class Client {
       ctx.setQueue(args.getQueue());
     } else if (StringUtils.isNotEmpty(jobConfig.scheduler_queue)) {
       ctx.setQueue(jobConfig.scheduler_queue);
+    }
+  }
+
+  private void replaceVars(File file, String ori, String var) throws IOException {
+    if (file.isFile()) {
+      if (file.getName().endsWith(".js") || file.getName().endsWith(".html") || file.getName()
+          .endsWith(".css")) {
+        String contents = FileUtils.readFileToString(file).replaceAll(ori, var);
+        FileUtils.writeStringToFile(file, contents);
+      }
+    } else if (file.isDirectory()) {
+      for (File subFile : file.listFiles()) {
+        replaceVars(subFile, ori, var);
+      }
     }
   }
 

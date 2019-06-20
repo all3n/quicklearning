@@ -6,9 +6,11 @@
   "license": "MIT",
   "scripts": {
     "dev": "vue-cli-service serve",
+    "hsdev": "vue-cli-service serve --mode historyserver",
     "build:prod": "vue-cli-service build",
     "build:stage": "vue-cli-service build --mode staging",
     "build:dev": "vue-cli-service build --mode development",
+    "build:historyserver": "vue-cli-service build --mode historyserver",
     "build": "vue-cli-service build --mode development",
     "preview": "node build/index.js --preview",
     "lint": "eslint --ext .js,.vue src",
