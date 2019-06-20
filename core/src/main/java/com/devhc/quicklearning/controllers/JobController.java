@@ -12,6 +12,7 @@ import com.devhc.quicklearning.scheduler.BaseScheduler;
 import com.devhc.quicklearning.scheduler.yarn.YarnResourceAllocator;
 import com.devhc.quicklearning.scheduler.yarn.YarnScheduler;
 import com.devhc.quicklearning.utils.Constants;
+import com.devhc.quicklearning.utils.JobConfigJson;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.List;
@@ -51,7 +52,7 @@ public class JobController {
 
 
   public AppContainer.AppContainerBuilder convertContainer(String type, Container v) {
-    var appContainerBuilder = AppContainer.builder().cid(type)
+    var appContainerBuilder = AppContainer.builder().cid(v.getId().toString())
         .host(v.getNodeId().getHost()).port(v.getNodeId().getPort())
         .logLink(
             "http://" + v.getNodeHttpAddress() + "/node/containerlogs/" + v.getId().toString()
@@ -94,7 +95,11 @@ public class JobController {
         }
       }
 
+      AppContainer masterContainer = AppContainer.builder().logLink(app.getMasterLink()).build();
+
+
       var appContainers = AppContainers.builder()
+          .masterContainer(masterContainer)
           .runningContainers(runningContainers)
           .finishContainers(finishContainers)
           .build();

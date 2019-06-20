@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 @Builder
 public class AppContainers {
-
+  private AppContainer masterContainer;
   private Map<String, List<AppContainer>> runningContainers;
   private Map<String, List<AppContainer>> finishContainers;
 

@@ -43,7 +43,6 @@ public class AppMaster {
     this.args = args;
     this.scheduler = scheduler;
     this.app = app;
-    app.setUser(JobUtils.getCurUser());
     LOG.info("master args:{}", args);
 
     try {

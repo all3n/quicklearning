@@ -8,6 +8,10 @@ import locale from 'element-ui/lib/locale/lang/en' // lang i18n
 
 import '@/styles/index.scss' // global css
 
+import _ from 'lodash'
+Vue.prototype._ = _
+
+
 import App from './App'
 import store from './store'
 import router from './router'

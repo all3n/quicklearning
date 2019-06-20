@@ -85,10 +85,13 @@ public class YarnScheduler extends BaseScheduler {
 
   @Override
   public void init() throws Exception {
-    this.conf = new QuickLearningConf();
-    String userName = UserGroupInformation.getCurrentUser().getUserName();
-    LOG.info("User:{}", userName);
     Map<String, String> envs = System.getenv();
+    this.conf = new QuickLearningConf();
+//    String userName = UserGroupInformation.getCurrentUser().getUserName();
+
+    String userName = envs.get(Environment.USER.toString());
+//    LOG.info("User:{}", userName);
+    app.setUser(userName);
     this.appBasePath = envs.get(Constants.BASE_HDFS_PATH);
     LOG.info("BasePath:{}", appBasePath);
     this.cmdSuffix = " 1> " + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stdout" + " 2> "
@@ -101,7 +104,16 @@ public class YarnScheduler extends BaseScheduler {
     if (envs.containsKey(ApplicationConstants.APPLICATION_WEB_PROXY_BASE_ENV)) {
       this.webProxyBase = envs.get(ApplicationConstants.APPLICATION_WEB_PROXY_BASE_ENV);
     }
+
+    String appMasterCid = envs.get(Environment.CONTAINER_ID.toString());
+    String nmHttpPort = envs.get(Environment.NM_HTTP_PORT.toString());
     this.yarnResourceAlloctor = new YarnResourceAllocator();
+
+    app.setMasterLink(String
+        .format("http://%s:%s/node/containerlogs/%s/%s", applicationMasterHostname, nmHttpPort,
+            appMasterCid, userName));
+
+
   }
 
 
