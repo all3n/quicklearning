@@ -124,7 +124,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-build/
+/build/
 develop-eggs/
 dist/
 downloads/
@@ -258,3 +258,5 @@ tags
 /upload
 
 # End of https://www.gitignore.io/api/vim,java,python,intellij+all
+package-lock.json
+node_modules

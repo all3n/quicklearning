@@ -7,16 +7,27 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import java.util.Map;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.yarn.api.records.LocalResource;
+import org.apache.hadoop.yarn.api.records.LocalResourceType;
+import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import org.apache.hadoop.yarn.api.records.URL;
 import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
+import org.apache.hadoop.yarn.util.Records;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class JobUtils {
+
   private static Logger LOG = LoggerFactory.getLogger(JobUtils.class);
   public static final FsPermission TEMP_PERM = new FsPermission("777");
   public static final String HDFS_USER_ROOT = "/user";
@@ -26,6 +37,7 @@ public class JobUtils {
   public static String getName(String filePath) {
     return new Path(filePath).getName();
   }
+
   public static String getCurUser() {
     return System.getProperty("user.name");
   }
@@ -50,7 +62,43 @@ public class JobUtils {
     return basePath;
   }
 
+  public static void setResourceByPath(Map<String, LocalResource> localResources, Path lrpath,String alias,
+      Configuration conf)
+      throws IOException {
+//    Path lrpath = localRes.getPath();
+    FileSystem fs = FileSystem.get(conf);
 
+    URI ruri = lrpath.toUri();
+    Path linkNamePath = new Path((null == ruri.getFragment())
+        ? lrpath.getName()
+        : ruri.getFragment());
+    if (linkNamePath.isAbsolute()) {
+      throw new IllegalArgumentException("Resource name must relative");
+    }
+    FileStatus localRes = fs.getFileLinkStatus(lrpath);
+    String linkName = linkNamePath.toUri().getPath();
+    LOG.info("name:{}, container res:{} {}", lrpath.getName(), lrpath.toString());
+    LocalResource lr = Records.newRecord(LocalResource.class);
+    lr.setResource(JobUtils.fromURI(localRes.getPath().toUri(), conf));
+    lr.setSize(localRes.getLen());
+    lr.setTimestamp(localRes.getModificationTime());
+    if (lrpath.getName().endsWith(".tar") ||
+        lrpath.getName().endsWith(".gz") ||
+        lrpath.getName().endsWith(".zip")) {
+      lr.setType(LocalResourceType.ARCHIVE);
+    } else {
+      lr.setType(LocalResourceType.FILE);
+    }
+    if(StringUtils.isNotEmpty(alias)){
+      linkName = alias;
+    }else if(lr.getType() == LocalResourceType.ARCHIVE){
+      int dIndex = linkName.indexOf(".");
+      linkName = linkName.substring(0, dIndex);
+    }
+    lr.setVisibility(LocalResourceVisibility.PUBLIC);
+    localResources.put(linkName, lr);
+    fs.close();
+  }
 
 
   public static ArrayList<String> splitString(String value, String seperator) {
@@ -97,4 +145,23 @@ public class JobUtils {
     url.setFile(uri.getPath());
     return url;
   }
+
+
+  public static <T> T parseArgument(T obj, String args[]) {
+    CmdLineParser parser = new CmdLineParser(obj);
+    try {
+      parser.parseArgument(args);
+    } catch (CmdLineException e) {
+      e.printStackTrace();
+      parser.printUsage(System.err);
+      System.exit(-1);
+    }
+    return obj;
+  }
+
+
+  public String convertArchiveName(String fileName) {
+    return fileName.substring(0, fileName.indexOf("."));
+  }
+
 }

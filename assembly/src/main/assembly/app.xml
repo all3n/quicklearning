@@ -8,7 +8,7 @@
     <dependencySet>
       <useProjectArtifact>true</useProjectArtifact>
       <includes>
-        <include>com.devhc.quicklearning:core</include>
+        <include>com.devhc.quicklearning:quicklearning-core</include>
       </includes>
     </dependencySet>
   </dependencySets>
@@ -22,13 +22,19 @@
       <fileMode>0755</fileMode>
       <directory>${project.parent.basedir}/scripts</directory>
     </fileSet>
+    <!--
     <fileSet>
       <outputDirectory>/libs</outputDirectory>
       <directory>${project.parent.basedir}/core/target/libs</directory>
     </fileSet>
+    -->
     <fileSet>
       <outputDirectory>/conf</outputDirectory>
       <directory>${project.parent.basedir}/conf</directory>
+    </fileSet>
+    <fileSet>
+      <outputDirectory>/public</outputDirectory>
+      <directory>${project.parent.basedir}/public/dist</directory>
     </fileSet>
   </fileSets>
 </assembly>
