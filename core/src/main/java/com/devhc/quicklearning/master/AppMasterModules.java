@@ -10,7 +10,7 @@ import com.devhc.quicklearning.server.jersey.JerseyModule;
 import com.devhc.quicklearning.server.jersey.configuration.JerseyConfiguration;
 import com.devhc.quicklearning.server.rpc.RpcModule;
 import com.devhc.quicklearning.server.rpc.RpcServerConfig;
-import com.devhc.quicklearning.utils.ConfigUtils;
+import com.devhc.quicklearning.utils.JsonUtils;
 import com.devhc.quicklearning.utils.JobConfigJson;
 import com.devhc.quicklearning.utils.JobUtils;
 import com.google.inject.AbstractModule;
@@ -29,7 +29,8 @@ public class AppMasterModules extends AbstractModule {
   protected void configure() {
     install(new AppServletModule());
     bind(MasterArgs.class).toInstance(masterArgs);
-    bind(JobConfigJson.class).toInstance(ConfigUtils.parseJson(masterArgs.getConfigFile(), JobConfigJson.class));
+    bind(JobConfigJson.class).toInstance(
+        JsonUtils.parseJson(masterArgs.getConfigFile(), JobConfigJson.class));
     if(masterArgs.getAppType().equals("xdl")){
       bind(BaseApp.class).to(XdlApp.class).in(Singleton.class);
     }else{

@@ -4,8 +4,14 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 
 public class QuickLearningConf extends YarnConfiguration {
+  public static final String QUICK_LEARNING_DEFAULT_CONF = "quick-learning-default.xml";
+  public static final String QUICK_LEARNING_SITE_CONF = "quick-learning-default.xml";
+
+  public static final String META_CONFIG = "quicklearning.meta.dir";
+
   static {
-    Configuration.addDefaultResource("quick-learning.xml");
+    Configuration.addDefaultResource(QUICK_LEARNING_DEFAULT_CONF);
+    Configuration.addDefaultResource(QUICK_LEARNING_SITE_CONF);
   }
 
 

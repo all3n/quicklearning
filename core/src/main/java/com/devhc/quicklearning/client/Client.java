@@ -2,12 +2,11 @@ package com.devhc.quicklearning.client;
 
 import com.devhc.quicklearning.conf.QuickLearningConf;
 import com.devhc.quicklearning.master.AppMaster;
-import com.devhc.quicklearning.utils.ConfigUtils;
+import com.devhc.quicklearning.utils.JsonUtils;
 import com.devhc.quicklearning.utils.Constants;
 import com.devhc.quicklearning.utils.JobConfigJson;
 import com.devhc.quicklearning.utils.JobUtils;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.inject.Guice;
 import com.google.inject.Module;
 import java.io.File;
@@ -23,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -68,7 +68,9 @@ public class Client {
   private String frameworkLocal;
 
   @Inject
-  public Client(ClientArgs args) {
+  public Client(ClientArgs args) throws IOException {
+    System.out.println(IOUtils.toString(getClass().getClassLoader().
+        getResourceAsStream(Constants.BANNER)));
     this.args = args;
     LOG.info("args {}", args);
     user = JobUtils.getCurUser();
@@ -81,7 +83,7 @@ public class Client {
       LOG.error("{} not exists", args.getConfig());
       System.exit(-1);
     }
-    this.jobConfig = ConfigUtils.parseJson(args.getConfig(), JobConfigJson.class);
+    this.jobConfig = JsonUtils.parseJson(args.getConfig(), JobConfigJson.class);
   }
 
   private void shutdown() {

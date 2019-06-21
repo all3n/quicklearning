@@ -1,7 +1,10 @@
 package com.devhc.quicklearning.scheduler.yarn;
 
+import com.devhc.quicklearning.apps.AppContainer;
+import com.devhc.quicklearning.apps.AppContainers;
 import com.devhc.quicklearning.apps.AppJob;
 import com.devhc.quicklearning.apps.BaseApp;
+import com.devhc.quicklearning.beans.JobMeta;
 import com.devhc.quicklearning.conf.QuickLearningConf;
 import com.devhc.quicklearning.master.MasterArgs;
 import com.devhc.quicklearning.scheduler.BaseScheduler;
@@ -10,14 +13,18 @@ import com.devhc.quicklearning.server.WebServer;
 import com.devhc.quicklearning.utils.Constants;
 import com.devhc.quicklearning.utils.JobConfigJson;
 import com.devhc.quicklearning.utils.JobUtils;
+import com.devhc.quicklearning.utils.JsonUtils;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import lombok.var;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -78,6 +85,10 @@ public class YarnScheduler extends BaseScheduler {
   private int totalFinishNum = 0;
   private int successWorkerNum = 0;
   private int failWorkerNum = 0;
+  private String metaFile;
+  private String appId;
+  private ContainerId appContainerId;
+  private JobMeta meta;
 
   public YarnResourceAllocator getYarnResourceAlloctor() {
     return yarnResourceAlloctor;
@@ -87,6 +98,14 @@ public class YarnScheduler extends BaseScheduler {
   public void init() throws Exception {
     Map<String, String> envs = System.getenv();
     this.conf = new QuickLearningConf();
+    String appMasterCid = envs.get(Environment.CONTAINER_ID.toString());
+    this.appContainerId = ContainerId.fromString(appMasterCid);
+    this.appId = appContainerId.getApplicationAttemptId().getApplicationId().toString();
+    String metaDir = conf.get(QuickLearningConf.META_CONFIG) + "/" + appId;
+    this.metaFile = metaDir + "/" + "meta.json";
+    var fs = FileSystem.get(conf);
+    fs.mkdirs(new Path(metaDir));
+
 //    String userName = UserGroupInformation.getCurrentUser().getUserName();
 
     String userName = envs.get(Environment.USER.toString());
@@ -105,15 +124,44 @@ public class YarnScheduler extends BaseScheduler {
       this.webProxyBase = envs.get(ApplicationConstants.APPLICATION_WEB_PROXY_BASE_ENV);
     }
 
-    String appMasterCid = envs.get(Environment.CONTAINER_ID.toString());
     String nmHttpPort = envs.get(Environment.NM_HTTP_PORT.toString());
     this.yarnResourceAlloctor = new YarnResourceAllocator();
+    yarnResourceAlloctor.setUserName(userName);
 
     app.setMasterLink(String
         .format("http://%s:%s/node/containerlogs/%s/%s", applicationMasterHostname, nmHttpPort,
             appMasterCid, userName));
 
 
+    // set meta
+    meta = JobMeta.builder()
+        .job(jobConfig)
+        .jobId(appId)
+        .status("RUNING")
+        .build();
+
+  }
+
+  @Override
+  public AppContainers getAppContainers() {
+    var appContainers = yarnResourceAlloctor.getAppContainers();
+    appContainers.setMasterContainer(AppContainer.builder().logLink(app.getMasterLink()).build());
+    return appContainers;
+  }
+
+  public JobMeta getMeta() {
+    meta.setContainers(getAppContainers());
+    return meta;
+  }
+
+  public void updateMeta(JobMeta meta) throws IOException {
+    var fs = FileSystem.get(conf);
+    var outs = fs.create(new Path(metaFile), true);
+    try (var writer = new PrintWriter(outs)) {
+      writer.print(JsonUtils.transformObjectToJson(meta, true));
+      writer.flush();
+    }
+    fs.close();
   }
 
 
@@ -159,20 +207,26 @@ public class YarnScheduler extends BaseScheduler {
     this.successWorkerNum = 0;
     float deltaResponse = 1.0f / totalWorkerNum;
     float responseId = 0.01f;
+    boolean success = true;
     while (successWorkerNum < totalWorkerNum) {
       this.processResponse(rmClient.allocate(responseId).getCompletedContainersStatuses());
       responseId = deltaResponse * successWorkerNum;
       Thread.sleep(1000);
       LOG.info("successWorkerNum:{}", successWorkerNum);
       if ((failWorkerNum / (float) totalWorkerNum) > 0.75f) {
-        return false;
+        success = false;
+        break;
       }
     }
+    var meta = getMeta();
+    meta.setStatus(success ? "SUCCESS": "FAIL");
+    updateMeta(meta);
     LOG.info("job finished!");
-    return true;
+    return success;
   }
 
-  private void processResponse(List<ContainerStatus> completedContainersStatuses) {
+  private void processResponse(List<ContainerStatus> completedContainersStatuses)
+      throws IOException {
     if (completedContainersStatuses.size() == 0) {
       return;
     }
@@ -191,6 +245,7 @@ public class YarnScheduler extends BaseScheduler {
         yarnResourceAlloctor.failContainer(cid);
         failWorkerNum += 1;
       }
+      updateMeta(getMeta());
     }
   }
 

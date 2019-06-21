@@ -65,12 +65,18 @@ public class DockerRunCommand {
   }
 
   private static void buildMapParam(StringBuilder sb, String param, Map<String, String> values) {
+    if(values == null){
+      return;
+    }
     for (var es : values.entrySet()) {
       // --name k=v
       sb.append(param).append(" ").append(es.getKey()).append("=").append(es.getValue()).append(" ");
     }
   }
    private static void buildMapParamInt(StringBuilder sb, String param, Map<Integer, Integer> values, String split) {
+    if(values == null){
+      return;
+    }
     for (var es : values.entrySet()) {
       // --name k:v
       sb.append(param).append(" ").append(es.getKey()).append(split).append(es.getValue()).append(" ");

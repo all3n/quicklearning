@@ -7,4 +7,5 @@ public class Constants {
   public final static String APP_DIR = "app";
   public final static String ENV_DIR = "env";
 
+  public static final String BANNER = "banner.txt";
 }

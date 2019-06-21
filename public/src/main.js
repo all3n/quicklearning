@@ -10,7 +10,7 @@ import '@/styles/index.scss' // global css
 
 import _ from 'lodash'
 Vue.prototype._ = _
-
+Object.defineProperty(Vue.prototype, '$_', { value: _ })
 
 import App from './App'
 import store from './store'
@@ -28,7 +28,7 @@ import '@/permission' // permission control
  * please remove it before going online! ! !
  */
 import { mockXHR } from '../mock'
-if (process.env.NODE_ENV == 'development') {
+if (process.env.NODE_ENV === 'development') {
   mockXHR()
 }
 

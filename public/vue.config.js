@@ -10,6 +10,11 @@ const name = defaultSettings.title || 'quick learning' // page title
 
 const outputDir = 'target/' + (process.env.BUILD_APP || 'appmaster')
 const mainScript = process.env.BUILD_APP || 'main'
+
+const IS_PROD = process.env.NODE_ENV === 'production'
+
+const publicPath = IS_PROD && mainScript === 'main' ? '{APP_BASE_URL}/' : '/'
+
 // If your port is set to 80,
 // use administrator privileges to execute the command line.
 // For example, Mac: sudo npm run
@@ -17,7 +22,6 @@ const port = 9528 // dev port
 
 // All configuration item explanations can be find in https://cli.vuejs.org/config/
 
-const IS_PROD = process.env.NODE_ENV === 'production'
 module.exports = {
   /**
    * You will need to set publicPath if you plan to deploy your site under a sub path,
@@ -26,8 +30,7 @@ module.exports = {
    * In most cases please use '/' !!!
    * Detail: https://cli.vuejs.org/config/#publicpath
    */
-  publicPath: IS_PROD ? '{APP_BASE_URL}/'
-    : '/',
+  publicPath: publicPath,
   outputDir: outputDir,
   assetsDir: 'static',
   lintOnSave: process.env.NODE_ENV === 'development',

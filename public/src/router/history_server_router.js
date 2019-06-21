@@ -54,7 +54,7 @@ export const constantRoutes = [
       meta: { title: 'Dashboard', icon: 'dashboard' }
     }]
   },
-/*
+  /*
   {
     path: '/example',
     component: Layout,

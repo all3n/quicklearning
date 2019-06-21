@@ -1,6 +1,6 @@
 package com.devhc.quicklearning.apps.xdl;
 
-import com.devhc.quicklearning.utils.ConfigUtils;
+import com.devhc.quicklearning.utils.JsonUtils;
 import com.devhc.quicklearning.utils.JobConfigJson;
 import com.google.inject.AbstractModule;
 
@@ -15,6 +15,6 @@ public class XdlModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(JobConfigJson.class).toInstance(
-        ConfigUtils.parseJson(args.getConfig(), JobConfigJson.class));
+        JsonUtils.parseJson(args.getConfig(), JobConfigJson.class));
   }
 }

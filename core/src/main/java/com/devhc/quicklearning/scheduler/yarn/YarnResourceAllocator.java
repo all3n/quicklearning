@@ -1,5 +1,7 @@
 package com.devhc.quicklearning.scheduler.yarn;
 
+import com.devhc.quicklearning.apps.AppContainer;
+import com.devhc.quicklearning.apps.AppContainers;
 import com.devhc.quicklearning.apps.AppJob;
 import com.devhc.quicklearning.apps.AppResource;
 import com.google.common.collect.Lists;
@@ -10,6 +12,8 @@ import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+import lombok.Setter;
+import lombok.var;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateResponse;
 import org.apache.hadoop.yarn.api.records.Container;
 import org.apache.hadoop.yarn.api.records.ContainerId;
@@ -29,6 +33,9 @@ import org.slf4j.LoggerFactory;
  * @author wanghuacheng
  */
 public class YarnResourceAllocator {
+  @Getter
+  @Setter
+  private String userName;
 
   @Data
   @Builder
@@ -72,9 +79,53 @@ public class YarnResourceAllocator {
       priority++;
     }
     LOG.info("appAllocContainers:{} containerInfoMap:{}", appAllocContainers, containerInfoMap);
-
-
   }
+
+  public AppContainer.AppContainerBuilder convertContainer(String type, Container v) {
+    var appContainerBuilder = AppContainer.builder()
+        .type(type)
+        .cid(v.getId().toString())
+        .host(v.getNodeId().getHost())
+        .port(v.getNodeId().getPort())
+        .logLink(
+            "http://" + v.getNodeHttpAddress() + "/node/containerlogs/" + v.getId().toString()
+                + "/" + userName);
+    return appContainerBuilder;
+  }
+
+  public AppContainers getAppContainers(){
+    var runningMap = containerInfoMap;
+
+    Map<String, List<AppContainer>> runningContainersMap = Maps.newHashMap();
+    Map<String, List<AppContainer>> finishContainersMap = Maps.newHashMap();
+    for (var rme : runningMap.entrySet()) {
+      String jobType = rme.getValue().getType();
+      var cons = runningContainersMap
+          .computeIfAbsent(jobType, k -> Lists.newArrayList());
+      var v = appAllocContainers.get(jobType)[rme.getValue().getIndex()];
+      if (v != null) {
+        cons.add(convertContainer(jobType, v).status(0).build());
+      }
+    }
+
+    for (var rc : finishContainers.entrySet()) {
+      String type = rc.getKey();
+      var cons = finishContainersMap.computeIfAbsent(type, k -> Lists.newArrayList());
+
+      for (var yarnStatusContainer : rc.getValue()) {
+        var v = yarnStatusContainer.getContainer();
+        cons.add(convertContainer(yarnStatusContainer.getType(), v)
+            .status(yarnStatusContainer.isSuccess() ? 1 : 2).build());
+      }
+    }
+
+    var appContainers = AppContainers.builder()
+        .runningContainers(runningContainersMap)
+        .finishContainers(finishContainersMap)
+        .build();
+    return appContainers;
+  }
+
 
   private void allocAppContainers(AppJob appJob)
       throws YarnException, IOException, InterruptedException {

@@ -1,54 +1,60 @@
 <template>
-  <div class="dashboard-container" v-if="containers">
+  <div v-if="containers" class="dashboard-container">
     <div v-if="info">
       <h3>info</h3>
       <el-table :data="info" style="width: 100%">
-        <el-table-column prop="name" label="name" width="200"></el-table-column>
-        <el-table-column prop="value" label="value" width="600"></el-table-column>
+        <el-table-column prop="name" label="name" width="200" />
+        <el-table-column prop="value" label="value" width="600" />
       </el-table>
     </div>
     <div v-if="containers.masterContainer">
       <h3>Master</h3>
       <a :href="containers.masterContainer.logLink" target="_blank" class="buttonText">
-        <el-button type="primary" icon="el-icon-view" circle></el-button>
+        <el-button type="primary" icon="el-icon-view" circle />
       </a>
     </div>
-    <container-table
-      title="runningContainers"
-      :tableData="containers.runningContainers"
-    />
-
-    <container-table
-      title="finishContainers"
-      :tableData="containers.finishContainers"
-    />
-    
+    <container-table title="runningContainers" :table-data="containers.runningContainers" />
+    <container-table title="finishContainers" :table-data="containers.finishContainers" />
   </div>
 </template>
 
 <script>
-import { mapGetters } from "vuex";
-import job_api from "@/api/job";
-import ContainerTable from '@/components/ContainerTable';
+import { mapGetters } from 'vuex'
+import job_api from '@/api/job'
+import ContainerTable from '@/components/ContainerTable'
+import { setTimeout } from 'timers';
 
 export default {
-  name: "Dashboard",
+  name: 'Dashboard',
   components: {
     ContainerTable
   },
-  props: ['info', 'containers'],
-  created() {
-    this.init()
+  data() {
+    return {
+      info: null,
+      containers: null
+    }
   },
   computed: {
     ...mapGetters(['name'])
   },
+  created() {
+    this.init()
+  },
   methods: {
+     update_containers(){
+      job_api.get_job_containers().then(res => {
+        this.containers = res.data
+        setTimeout(
+          this.update_containers
+        , 1000)
+      })
+    },
     init() {
       job_api
         .get_job_info()
         .then(res => {
-          this.info = _.map(res.data, function(v, k) {
+          this.info = this.$_.map(res.data, function(v, k) {
             return {
               name: k,
               value: v
@@ -58,10 +64,7 @@ export default {
         .catch(err => {
           console.log('err:', err)
         })
-
-      job_api.get_job_containers().then(res => {
-        this.containers = res.data
-      })
+        this.update_containers()
     }
   }
 }

@@ -24,6 +24,7 @@ public class HistoryServerModules extends AbstractModule {
         .addPackage(IndexController.class.getPackage().getName())
         .addPort(args.getPort())
         .build();
+    bind(MetaLoader.class).to(HdfsMetaLoader.class);
     install(new JerseyModule(configuration));
   }
 }
