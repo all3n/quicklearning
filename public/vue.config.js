@@ -8,8 +8,8 @@ function resolve(dir) {
 
 const name = defaultSettings.title || 'quick learning' // page title
 
-const outputDir = 'target/' + (process.env.BUILD_APP || 'appmaster')
-const mainScript = process.env.BUILD_APP || 'main'
+const outputDir = 'target/' + (process.env.VUE_APP_NAME || 'appmaster')
+const mainScript = process.env.VUE_APP_NAME || 'main'
 
 const IS_PROD = process.env.NODE_ENV === 'production'
 

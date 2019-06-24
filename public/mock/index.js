@@ -4,12 +4,24 @@ import { param2Obj } from '../src/utils'
 import user from './user'
 import table from './table'
 import job from './job'
+import index from './historyserver'
 
-const mocks = [
-  ...user,
-  ...table,
-  ...job
-]
+console.log(process.env)
+var build_app = process.env.VUE_APP_NAME || 'appmaster'
+var mocks = []
+
+if (build_app === 'appmaster') {
+  mocks = [
+    ...user,
+    ...table,
+    ...job
+  ]
+} else {
+  mocks = [
+    ...index
+  ]
+}
+console.log(mocks)
 
 // for front mock
 // please use it cautiously, it will redefine XMLHttpRequest,

@@ -22,7 +22,7 @@
 import { mapGetters } from 'vuex'
 import job_api from '@/api/job'
 import ContainerTable from '@/components/ContainerTable'
-import { setTimeout } from 'timers';
+import { setTimeout } from 'timers'
 
 export default {
   name: 'Dashboard',
@@ -42,12 +42,12 @@ export default {
     this.init()
   },
   methods: {
-     update_containers(){
+    update_containers() {
       job_api.get_job_containers().then(res => {
         this.containers = res.data
         setTimeout(
           this.update_containers
-        , 1000)
+          , 1000)
       })
     },
     init() {
@@ -64,7 +64,7 @@ export default {
         .catch(err => {
           console.log('err:', err)
         })
-        this.update_containers()
+      this.update_containers()
     }
   }
 }
