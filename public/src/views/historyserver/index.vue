@@ -36,7 +36,7 @@ export default {
   methods: {
     init() {
       hs_api
-        .get_history_list()
+        .get_history_list(1, 30)
         .then(res => {
           console.log(res.data)
           this.info = res.data.items

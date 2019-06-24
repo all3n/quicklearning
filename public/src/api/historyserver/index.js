@@ -1,15 +1,19 @@
 import request from '@/utils/request'
 
-function get_history_list() {
+function get_history_list(page, page_size) {
   return request({
     url: '/historyserver/list',
-    method: 'get'
+    method: 'get',
+    params: {
+      'page': page,
+      'page_size': page_size
+    }
   })
 }
 
 function get_history_info(appid) {
   return request({
-    url: '/historyserver/info/:appid',
+    url: '/historyserver/info',
     method: 'get',
     params: { 'appid': appid }
   })

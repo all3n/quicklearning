@@ -14,12 +14,12 @@ import org.apache.commons.lang.StringUtils;
 @Data
 public class DockerRunCommand {
 
+  private String image;
   private String user;
   private String workerDir;
   private String cudaVisiableDevice;
   private String cpuset;
   private String script;
-  private String params;
   private String jobType;
   private String network;
   private int cpuCores;
@@ -60,6 +60,11 @@ public class DockerRunCommand {
     buildMapParam(sb, "-v", volumns);
     buildMapParam(sb, "-p", envs);
     buildMapParamInt(sb, "-p", expose, ":");
+    sb.append(" ");
+    sb.append(image);
+    sb.append(" -c \"");
+    sb.append(script);
+    sb.append("\"");
 
     return sb.toString();
   }

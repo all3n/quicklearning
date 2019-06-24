@@ -22,8 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author wanghuacheng
- * this  script run in master alloc containers
+ * @author wanghuacheng this  script run in master alloc containers
  */
 public class XdlContainerRunner {
 
@@ -97,12 +96,12 @@ public class XdlContainerRunner {
   }
 
 
-  public String wrapWithCreateUser(String workDir, String entry) {
+  public String wrapWithCreateUser(String workDir, String entry, String args) {
     String uid = JobUtils.getCurUId();
     String jobCmd;
     if (StringUtils.isNotEmpty(uid)) {
-      jobCmd = String.format("useradd -u %s %s;su %s -c 'source /etc/profile && cd %s && %s'",
-          uid, user, user, workDir, entry);
+      jobCmd = String.format("useradd -u %s %s;su %s -c 'source /etc/profile && cd %s && %s %s'",
+          uid, user, user, workDir, entry, args == null ? "" : args);
     } else {
       jobCmd = entry;
     }
@@ -121,12 +120,13 @@ public class XdlContainerRunner {
     volumes.put(curDir + "/" + Constants.APP_DIR, workerDir);
     volumes.put(curDir + "/" + Constants.QUICK_LEARNING_DIR, "/" + Constants.QUICK_LEARNING_DIR);
 
-    String mainScript = wrapWithCreateUser(workerDir, jobRes.entry);
+    String mainScript = wrapWithCreateUser(workerDir, jobRes.entry, args.getArgs());
 
     // xdl zk
 
     String runCommand = DockerRunCommand.builder()
         .rmMode(true)
+        .image(config.docker_image)
         .cpuCores(jobRes.cpu_cores)
         .memory(jobRes.memory_m * 1024 * 1024) //bytes
         .script(mainScript)

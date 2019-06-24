@@ -11,14 +11,19 @@ export default [
       return {
         code: 20000,
         data: {
-          total: items.length,
+          pagination: {
+            "total": items.length,
+            "totalPages": 1,
+            "pageSize": 10,
+            "current": 0
+          },
           items: items
         }
       }
     }
   },
   {
-    url: '/historyserver/info/:appid',
+    url: '/historyserver/info',
     type: 'get',
     response: config => {
       return {

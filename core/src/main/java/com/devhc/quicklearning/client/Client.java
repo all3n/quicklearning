@@ -294,7 +294,7 @@ public class Client {
     String amStartCommand = "bash " + Constants.QUICK_LEARNING_DIR
         + "/bin/" + Constants.YARN_START_SCRIPT + " " + appMasterClazz +
         " -w " + Environment.PWD.$$() + "/" + Constants.QUICK_LEARNING_DIR +
-        "/public -s yarn  -t=" + args.getType() + "  1>"
+        "/web/appmaster -s yarn  -t=" + args.getType() + "  1>"
         + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stdout"
         + " 2>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stderr";
 
