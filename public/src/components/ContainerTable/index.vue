@@ -27,14 +27,14 @@
 </template>
 <script>
 const statusMsgMap = {
-  0: 'Running',
-  1: 'Success',
-  2: 'Fail'
+  'RUNNING': 'Running',
+  'SUCCESS': 'Success',
+  'FAIL': 'Fail'
 }
 const statusClassMap = {
-  0: 'gray',
-  1: 'success',
-  2: 'danger'
+  'RUNNING': 'gray',
+  'SUCCESS': 'success',
+  'FAIL': 'danger'
 }
 
 export default {

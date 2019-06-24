@@ -67,7 +67,7 @@
                             <goal>npm</goal>
                         </goals>
                         <configuration>
-                            <arguments>run build:historyserver</arguments>
+                            <arguments>run build:historyserver:${env}</arguments>
                         </configuration>
                     </execution>
 

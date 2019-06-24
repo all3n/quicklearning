@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * this controller used for get job's info
+ *
  * @author wanghuacheng
  */
 @Path("/api/job")
@@ -36,7 +37,7 @@ public class JobController {
   BaseScheduler scheduler;
 
   /**
-   * get job base info from config json
+   * get job info
    *
    * @return ApiResposne(JobConfigJson)
    */
@@ -44,10 +45,20 @@ public class JobController {
   @Path("/info")
   @Produces(MediaType.APPLICATION_JSON)
   public ApiResponse jobInfo() {
-    LOG.info("config:{}", app.getConfig());
-    return ok(app.getConfig());
+    return ok(scheduler.getMeta());
   }
 
+  /**
+   * get job info
+   *
+   * @return ApiResposne(JobConfigJson)
+   */
+  @GET
+  @Path("/config")
+  @Produces(MediaType.APPLICATION_JSON)
+  public ApiResponse jobConfig() {
+    return ok(app.getConfig());
+  }
 
   /**
    * get job containers info

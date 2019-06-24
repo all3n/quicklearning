@@ -1,27 +1,11 @@
 import Mock from 'mockjs'
 import { param2Obj } from '../src/utils'
+import mocks_map from './mocks-map'
 
-import user from './user'
-import table from './table'
-import job from './job'
-import index from './historyserver'
-
-console.log(process.env)
 var build_app = process.env.VUE_APP_NAME || 'appmaster'
-var mocks = []
 
-if (build_app === 'appmaster') {
-  mocks = [
-    ...user,
-    ...table,
-    ...job
-  ]
-} else {
-  mocks = [
-    ...index
-  ]
-}
-console.log(mocks)
+const mocks = mocks_map[build_app]
+
 
 // for front mock
 // please use it cautiously, it will redefine XMLHttpRequest,

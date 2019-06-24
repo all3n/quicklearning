@@ -4,6 +4,7 @@ import com.devhc.quicklearning.apps.AppContainer;
 import com.devhc.quicklearning.apps.AppContainers;
 import com.devhc.quicklearning.apps.AppJob;
 import com.devhc.quicklearning.apps.AppResource;
+import com.devhc.quicklearning.apps.AppStatus;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.IOException;
@@ -33,6 +34,7 @@ import org.slf4j.LoggerFactory;
  * @author wanghuacheng
  */
 public class YarnResourceAllocator {
+
   @Getter
   @Setter
   private String userName;
@@ -93,7 +95,7 @@ public class YarnResourceAllocator {
     return appContainerBuilder;
   }
 
-  public AppContainers getAppContainers(){
+  public AppContainers getAppContainers() {
     var runningMap = containerInfoMap;
 
     Map<String, List<AppContainer>> runningContainersMap = Maps.newHashMap();
@@ -104,7 +106,7 @@ public class YarnResourceAllocator {
           .computeIfAbsent(jobType, k -> Lists.newArrayList());
       var v = appAllocContainers.get(jobType)[rme.getValue().getIndex()];
       if (v != null) {
-        cons.add(convertContainer(jobType, v).status(0).build());
+        cons.add(convertContainer(jobType, v).status(AppStatus.RUNNING).build());
       }
     }
 
@@ -115,7 +117,7 @@ public class YarnResourceAllocator {
       for (var yarnStatusContainer : rc.getValue()) {
         var v = yarnStatusContainer.getContainer();
         cons.add(convertContainer(yarnStatusContainer.getType(), v)
-            .status(yarnStatusContainer.isSuccess() ? 1 : 2).build());
+            .status(yarnStatusContainer.isSuccess() ? AppStatus.SUCCESS : AppStatus.FAIL).build());
       }
     }
 

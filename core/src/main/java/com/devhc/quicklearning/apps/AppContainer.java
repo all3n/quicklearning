@@ -11,7 +11,7 @@ public class AppContainer {
   private String host;
   private int port;
   private int rpcPort;
-  private int status;
+  private AppStatus status;
   private String logLink;
   private int taskIndex;
   private long startTime;

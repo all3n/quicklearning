@@ -12,7 +12,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 @Singleton
-@Path("/api")
+@Path("/api/historyserver")
 public class IndexController {
   @Inject
   MetaLoader metaLoader;

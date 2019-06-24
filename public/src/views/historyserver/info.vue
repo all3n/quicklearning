@@ -6,12 +6,12 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import job_api from '@/api/job'
+import hs_api from '@/api/historyserver/index'
 import JobInfo from '@/components/JobInfo'
-import { setTimeout } from 'timers'
+console.log(hs_api)
 
 export default {
-  name: 'Dashboard',
+  name: 'HistoryInfo',
   components: {
     JobInfo
   },
@@ -27,16 +27,16 @@ export default {
     this.init()
   },
   methods: {
-    update_job_info() {
-      job_api.get_job_info().then(res => {
-        this.info = res.data
-        setTimeout(
-          this.update_job_info
-          , 1000)
-      })
-    },
     init() {
-      this.update_job_info()
+      hs_api
+        .get_history_info(this.$route.params.appid)
+        .then(res => {
+          console.log(res.data)
+          this.info = res.data
+        })
+        .catch(err => {
+          console.log('err:', err)
+        })
     }
   }
 }

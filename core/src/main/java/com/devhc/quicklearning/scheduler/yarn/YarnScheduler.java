@@ -137,7 +137,7 @@ public class YarnScheduler extends BaseScheduler {
     meta = JobMeta.builder()
         .job(jobConfig)
         .jobId(appId)
-        .status("RUNING")
+        .status("RUNNING")
         .build();
 
   }
@@ -149,6 +149,7 @@ public class YarnScheduler extends BaseScheduler {
     return appContainers;
   }
 
+  @Override
   public JobMeta getMeta() {
     meta.setContainers(getAppContainers());
     return meta;

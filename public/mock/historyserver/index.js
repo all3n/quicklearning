@@ -1,19 +1,10 @@
-import Mock from 'mockjs'
-
-const data = Mock.mock({
-  'items|30': [{
-    id: '@id',
-    title: '@sentence(10, 20)',
-    'status|1': ['published', 'draft', 'deleted'],
-    author: 'name',
-    display_time: '@datetime',
-    pageviews: '@integer(300, 5000)'
-  }]
-})
+import job_data from '../common/common_job'
+var data = job_data.data
+var info = job_data.info
 
 export default [
   {
-    url: '/table/list',
+    url: '/historyserver/list',
     type: 'get',
     response: config => {
       const items = data.items
@@ -25,5 +16,16 @@ export default [
         }
       }
     }
+  },
+  {
+    url: '/historyserver/info/:appid',
+    type: 'get',
+    response: config => {
+      return {
+        code: 20000,
+        data: info
+      }
+    }
   }
+
 ]

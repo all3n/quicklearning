@@ -9,7 +9,6 @@ import locale from 'element-ui/lib/locale/lang/en' // lang i18n
 import '@/styles/index.scss' // global css
 
 import _ from 'lodash'
-Vue.prototype._ = _
 Object.defineProperty(Vue.prototype, '$_', { value: _ })
 
 import App from './App'
