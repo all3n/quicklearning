@@ -35,7 +35,7 @@ public class HdfsMetaLoader extends MetaLoader {
     var listApps = Arrays.stream(listSt)
         .map(t -> HistoryJob.builder().app_id(t.getPath().getName())
             .timestamp(t.getModificationTime()).build())
-        .sorted((o1, o2) -> o1.getTimestamp() > o2.getTimestamp() ? 1 : 0)
+        .sorted(Comparator.comparingLong(HistoryJob::getTimestamp).reversed())
         .collect(Collectors.toList());
 
     var totalPages = (int) Math.ceil(listSt.length / pageRequest.getPageSize());

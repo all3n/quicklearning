@@ -11,7 +11,7 @@ import com.devhc.quicklearning.server.jersey.configuration.JerseyConfiguration;
 import com.devhc.quicklearning.server.rpc.RpcModule;
 import com.devhc.quicklearning.server.rpc.RpcServerConfig;
 import com.devhc.quicklearning.utils.JsonUtils;
-import com.devhc.quicklearning.utils.JobConfigJson;
+import com.devhc.quicklearning.beans.JobConfigJson;
 import com.devhc.quicklearning.utils.JobUtils;
 import com.google.inject.AbstractModule;
 import javax.inject.Singleton;

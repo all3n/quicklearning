@@ -1,4 +1,4 @@
-package com.devhc.quicklearning.utils;
+package com.devhc.quicklearning.beans;
 
 import java.util.Map;
 import lombok.Data;
@@ -7,13 +7,14 @@ import lombok.Data;
 public class JobConfigJson {
 
   public String jobType;
+  private String script;
 
 
   public static class RoleResource {
     public int instance_num = 1;
     public int cpu_cores = 4;
     public int gpu_cores = 0;
-    public int memory_m = 4096;
+    public long memory_m = 4096;
     public String entry = null;
     public boolean is_worker = false;
   }

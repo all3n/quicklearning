@@ -14,7 +14,7 @@
   <version>0.0.1-SNAPSHOT</version>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <hadoop.version>2.6.0</hadoop.version>
+    <hadoop.version>3.1.2</hadoop.version>
     <jackson.version>2.9.9</jackson.version>
     <jetty.version>9.4.18.v20190429</jetty.version>
     <guice.version>4.2.2</guice.version>
@@ -194,6 +194,12 @@
       <groupId>com.alibaba</groupId>
       <artifactId>fastjson</artifactId>
       <version>1.2.58</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-exec</artifactId>
+      <version>1.3</version>
     </dependency>
   </dependencies>
 

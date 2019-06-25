@@ -4,7 +4,7 @@ import com.devhc.quicklearning.conf.QuickLearningConf;
 import com.devhc.quicklearning.master.AppMaster;
 import com.devhc.quicklearning.utils.JsonUtils;
 import com.devhc.quicklearning.utils.Constants;
-import com.devhc.quicklearning.utils.JobConfigJson;
+import com.devhc.quicklearning.beans.JobConfigJson;
 import com.devhc.quicklearning.utils.JobUtils;
 import com.google.common.collect.Lists;
 import com.google.inject.Guice;

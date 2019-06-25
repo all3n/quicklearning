@@ -1,7 +1,7 @@
 package com.devhc.quicklearning.apps.xdl;
 
 import com.devhc.quicklearning.utils.JsonUtils;
-import com.devhc.quicklearning.utils.JobConfigJson;
+import com.devhc.quicklearning.beans.JobConfigJson;
 import com.google.inject.AbstractModule;
 
 public class XdlModule extends AbstractModule {

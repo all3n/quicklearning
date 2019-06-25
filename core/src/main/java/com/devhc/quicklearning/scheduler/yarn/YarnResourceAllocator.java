@@ -20,6 +20,7 @@ import org.apache.hadoop.yarn.api.records.Container;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.Priority;
 import org.apache.hadoop.yarn.api.records.Resource;
+import org.apache.hadoop.yarn.api.records.ResourceInformation;
 import org.apache.hadoop.yarn.client.api.AMRMClient;
 import org.apache.hadoop.yarn.client.api.AMRMClient.ContainerRequest;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -215,8 +216,14 @@ public class YarnResourceAllocator {
 
   public Resource convertAppResource(AppResource appRes) {
     Resource r = Records.newRecord(Resource.class);
-    r.setMemory(Math.min(appRes.getMemory(), maxResourceLimit.getMemory()));
+    long memory = Math.min(appRes.getMemory(), maxResourceLimit.getMemory());
+    r.setMemorySize(memory);
+    long gpu = Math.min(appRes.getGpu(), maxResourceLimit.getResourceValue(ResourceInformation.GPU_URI));
+    if(gpu > 0) {
+      r.setResourceValue(ResourceInformation.GPU_URI, gpu);
+    }
     r.setVirtualCores(Math.min(appRes.getVcore(), maxResourceLimit.getVirtualCores()));
+
     return r;
   }
 

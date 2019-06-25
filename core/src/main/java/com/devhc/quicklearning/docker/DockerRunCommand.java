@@ -53,29 +53,28 @@ public class DockerRunCommand {
     buildParam(sb, "--rm", rmMode);
     buildParam(sb, "-P", exposeAll);
     buildParam(sb, "-w=", workerDir);
-    buildParam(sb, "-m=", String.valueOf(memory));
+    buildParam(sb, "-m=", String.valueOf(memory * 1024 * 1024)); // mb -> bytes
     buildParam(sb, "-c=", String.valueOf(cpuCores));
     buildParam(sb, "--entrypoint=", entrypoint);
     buildParam(sb, "--net=", network);
-    buildMapParam(sb, "-v", volumns);
-    buildMapParam(sb, "-p", envs);
+    buildMapParam(sb, "-v", volumns, ":");
+    buildMapParam(sb, "-e", envs, "=");
     buildMapParamInt(sb, "-p", expose, ":");
     sb.append(" ");
     sb.append(image);
-    sb.append(" -c \"");
+    sb.append(" ");
     sb.append(script);
-    sb.append("\"");
 
     return sb.toString();
   }
 
-  private static void buildMapParam(StringBuilder sb, String param, Map<String, String> values) {
+  private static void buildMapParam(StringBuilder sb, String param, Map<String, String> values, String split) {
     if(values == null){
       return;
     }
     for (var es : values.entrySet()) {
       // --name k=v
-      sb.append(param).append(" ").append(es.getKey()).append("=").append(es.getValue()).append(" ");
+      sb.append(param).append(" ").append(es.getKey()).append(split).append(es.getValue()).append(" ");
     }
   }
    private static void buildMapParamInt(StringBuilder sb, String param, Map<Integer, Integer> values, String split) {

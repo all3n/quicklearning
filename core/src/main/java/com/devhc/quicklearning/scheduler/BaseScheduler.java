@@ -23,4 +23,8 @@ public abstract class BaseScheduler {
   public JobMeta getMeta() {
     return JobMeta.builder().build();
   }
+
+  public String getAppId() {
+    return "appid";
+  }
 }

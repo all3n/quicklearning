@@ -3,6 +3,8 @@ package com.devhc.quicklearning.utils;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,6 +64,24 @@ public class CmdUtils {
     err.start();
   }
 
+  public static int exeCmd3(String cmd, int retryTimes){
+    CommandLine line = CommandLine.parse(cmd);
+    DefaultExecutor exec = new DefaultExecutor();
+    int exitCode = 0;
+    while(retryTimes > 0) {
+      try {
+        exec.setExitValue(1);
+        exitCode = exec.execute(line);
+        if(exitCode == 0) {
+          break;
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      retryTimes--;
+    }
+    return exitCode;
+  }
   public static int exeCmd(String cmd, int retryTimes) {
     long startTime = System.currentTimeMillis();
     int exitCode = 0;

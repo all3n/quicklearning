@@ -5,8 +5,8 @@ import com.devhc.quicklearning.apps.AppResource;
 import com.devhc.quicklearning.apps.BaseApp;
 import com.devhc.quicklearning.master.MasterArgs;
 import com.devhc.quicklearning.utils.Constants;
-import com.devhc.quicklearning.utils.JobConfigJson;
-import com.devhc.quicklearning.utils.JobConfigJson.RoleResource;
+import com.devhc.quicklearning.beans.JobConfigJson;
+import com.devhc.quicklearning.beans.JobConfigJson.RoleResource;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,12 +25,10 @@ public class XdlApp extends BaseApp {
   private JobConfigJson conf;
   private ArrayList<AppJob> appJobs;
   private String user = "a";
-  private String zkRoot = "af";
-  private String zkConnectStr = "afsd";
   private String config;
-  private String volumes = "fads";
   private String args;
   private String port;
+  private String appId;
 
   @Inject
   public XdlApp(MasterArgs args, JobConfigJson conf) {
@@ -38,11 +36,6 @@ public class XdlApp extends BaseApp {
     this.conf = conf;
     intAppContainers();
   }
-
-
-
-
-
 
 
   private void intAppContainers() {
@@ -54,7 +47,7 @@ public class XdlApp extends BaseApp {
     appJobs.add(schedulerContainer);
 
     if (conf.jobs != null && conf.jobs.containsKey("worker")) {
-      if(conf.jobs.containsKey("ps")) {
+      if (conf.jobs.containsKey("ps")) {
         RoleResource ps = conf.jobs.get("ps");
         // ps
         AppJob psContainer = AppJob.builder().type("ps").
@@ -92,10 +85,13 @@ public class XdlApp extends BaseApp {
 
   @Override
   public String genCmds(AppJob job, int index, String suffix) {
+    // if job has entry use job first,else globa script
+    String entry = job.getEntry() == null ? conf.getScript() : job.getEntry();
+
     return genCmd(user, String.valueOf(index),
         job.getType(),
         config,
-        zkRoot, zkConnectStr, volumes, port, args, job.getEntry()) + " " + suffix;
+        port, args, entry) + " " + suffix;
   }
 
   @Override
@@ -105,17 +101,17 @@ public class XdlApp extends BaseApp {
 
 
   private String genCmd(String xdlUser, String workIndex, String workType, String config,
-      String xdlZKRoot,
-      String zookeeperConnStr, String volumeDirInHdfs, String port, String args, String entry) {
+      String port, String args, String entry) {
     String containerClazz = XdlContainerRunner.class.getName();
     String command =
 //        "$JAVA_HOME/bin/java" + " -Xmx256M "
         "bash " + Constants.QUICK_LEARNING_DIR + "/bin/" + Constants.YARN_START_SCRIPT + " "
             + containerClazz + " -c=" + config + " -j=" + workType
-            + " -i=" + workIndex + " -z=" + zookeeperConnStr + " -r=" + xdlZKRoot + " -u="
-            + xdlUser + " -v="
-            + volumeDirInHdfs + " -cpuset=_CPU_LIST_" + " -cd=" + "GPU_LIST_PLACEHOLDER" + (
+            + " -i=" + workIndex + " -u="
+            + xdlUser
+            + " -cpuset=_CPU_LIST_" + " -cd=" + "GPU_LIST_PLACEHOLDER" + (
             port == null ? "" : (" -xp=" + port))
+            + " --appId " + appId
             + " --entry '" + entry + "'"
             + (StringUtils.isNotEmpty(args) ? " -args='" + args + "' " : "");
     LOG.info("container start command is {} ", command);

@@ -7,7 +7,7 @@ import lombok.Data;
 @Builder
 public class AppResource {
   // unit: m
-  private int memory;
+  private long memory;
   private int vcore;
   private int gpu;
   private int instance;

@@ -11,13 +11,12 @@ import com.devhc.quicklearning.scheduler.BaseScheduler;
 import com.devhc.quicklearning.scheduler.yarn.YarnResourceAllocator.YarnContainerInfo;
 import com.devhc.quicklearning.server.WebServer;
 import com.devhc.quicklearning.utils.Constants;
-import com.devhc.quicklearning.utils.JobConfigJson;
+import com.devhc.quicklearning.beans.JobConfigJson;
 import com.devhc.quicklearning.utils.JobUtils;
 import com.devhc.quicklearning.utils.JsonUtils;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.List;
@@ -29,7 +28,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.api.ApplicationConstants.Environment;
 import org.apache.hadoop.yarn.api.protocolrecords.RegisterApplicationMasterResponse;
@@ -124,6 +122,7 @@ public class YarnScheduler extends BaseScheduler {
       this.webProxyBase = envs.get(ApplicationConstants.APPLICATION_WEB_PROXY_BASE_ENV);
     }
 
+
     String nmHttpPort = envs.get(Environment.NM_HTTP_PORT.toString());
     this.yarnResourceAlloctor = new YarnResourceAllocator();
     yarnResourceAlloctor.setUserName(userName);
@@ -131,7 +130,6 @@ public class YarnScheduler extends BaseScheduler {
     app.setMasterLink(String
         .format("http://%s:%s/node/containerlogs/%s/%s", applicationMasterHostname, nmHttpPort,
             appMasterCid, userName));
-
 
     // set meta
     meta = JobMeta.builder()
@@ -153,6 +151,11 @@ public class YarnScheduler extends BaseScheduler {
   public JobMeta getMeta() {
     meta.setContainers(getAppContainers());
     return meta;
+  }
+
+  @Override
+  public String getAppId() {
+    return appId;
   }
 
   public void updateMeta(JobMeta meta) throws IOException {
@@ -215,12 +218,13 @@ public class YarnScheduler extends BaseScheduler {
       Thread.sleep(1000);
       LOG.info("successWorkerNum:{}", successWorkerNum);
       if ((failWorkerNum / (float) totalWorkerNum) > 0.75f) {
+        LOG.info("fail rate > 0.75");
         success = false;
         break;
       }
     }
     var meta = getMeta();
-    meta.setStatus(success ? "SUCCESS": "FAIL");
+    meta.setStatus(success ? "SUCCESS" : "FAIL");
     updateMeta(meta);
     LOG.info("job finished!");
     return success;
@@ -234,17 +238,21 @@ public class YarnScheduler extends BaseScheduler {
     for (ContainerStatus cs : completedContainersStatuses) {
       totalFinishNum += 1;
       ContainerId cid = cs.getContainerId();
+
+      YarnContainerInfo cinfo = yarnResourceAlloctor.getContainerInfo(cid);
       if (cs.getExitStatus() == 0) {
         // only worker has exit 0
-        YarnContainerInfo cinfo = yarnResourceAlloctor.getContainerInfo(cid);
-        if (cinfo.getType().equals("worker")) {
-          successWorkerNum += 1;
-        }
         yarnResourceAlloctor.successContainer(cid);
         rmClient.releaseAssignedContainer(cid);
       } else {
         yarnResourceAlloctor.failContainer(cid);
-        failWorkerNum += 1;
+      }
+      if (cinfo.getType().equals("worker")) {
+        if (cs.getExitStatus() == 0) {
+          successWorkerNum += 1;
+        } else {
+          failWorkerNum += 1;
+        }
       }
       updateMeta(getMeta());
     }
@@ -261,6 +269,7 @@ public class YarnScheduler extends BaseScheduler {
           c.trim(),
           javaPathSeparator);
     }
+    Apps.addToEnvironment(appEnvs,"APPLICATION_ID", appId);
 
     LOG.info("JAVA CLASS_PATH is " + System.getProperty("java.class.path"));
   }

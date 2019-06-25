@@ -12,21 +12,15 @@ public class XdlArgs {
   @Option(name = "-j", aliases = "--jobType", usage = "jobType")
   private String jobType = "worker";
 
+  @Option(name = "-appId", aliases = "--appId", usage = "appId")
+  private String appId = "appId";
+
   @Option(name = "-i", aliases = "--workerIndex", usage = "workerIndex")
   private int workerIndex = 0;
-
-  @Option(name = "-z", aliases = "--zookeeperConnStr", usage = "zookeeperConnStr")
-  private String zookeeperConnStr;
-
-  @Option(name = "-r", aliases = "--zKRoot", usage = "xdlZKRoot")
-  private String xdlZKRoot;
 
 
   @Option(name = "-u", aliases = "--user", usage = "user name")
   private String user;
-
-  @Option(name = "-v", aliases = "--volume", usage = "volume")
-  private String volume;
 
 
   @Option(name = "-cpuset", aliases = "--cpuset", usage = "cpuset")

@@ -2,10 +2,6 @@ package com.devhc.quicklearning.controllers;
 
 
 import com.devhc.quicklearning.apps.BaseApp;
-import com.devhc.quicklearning.beans.ApiResponse;
-import com.devhc.quicklearning.utils.JobConfigJson;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.ws.rs.GET;

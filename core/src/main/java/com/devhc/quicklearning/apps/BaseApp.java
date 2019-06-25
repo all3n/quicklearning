@@ -1,6 +1,6 @@
 package com.devhc.quicklearning.apps;
 
-import com.devhc.quicklearning.utils.JobConfigJson;
+import com.devhc.quicklearning.beans.JobConfigJson;
 import java.util.List;
 import lombok.Data;
 
@@ -8,6 +8,8 @@ import lombok.Data;
 public abstract class BaseApp {
   private String user;
   private String masterLink;
+
+  private String appId;
 
 
   public abstract List<AppJob> getAppContainerInfo();
