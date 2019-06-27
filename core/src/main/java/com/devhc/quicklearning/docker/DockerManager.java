@@ -18,9 +18,12 @@ public class DockerManager {
     LOG.info("pull {} use {} s", image, use / 1000);
 
   }
-
-
   public void stop(String containerId) {
+    String dockerStopCommand = String.format("docker stop %s", containerId);
+    CmdUtils.exeCmd(dockerStopCommand, 1);
+  }
+
+  public void rm(String containerId) {
     String dockerStopCommand = String.format("docker rm -t 30 %s", containerId);
     CmdUtils.exeCmd(dockerStopCommand, 1);
   }

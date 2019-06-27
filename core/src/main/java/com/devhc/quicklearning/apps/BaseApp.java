@@ -8,7 +8,6 @@ import lombok.Data;
 public abstract class BaseApp {
   private String user;
   private String masterLink;
-
   private String appId;
 
 

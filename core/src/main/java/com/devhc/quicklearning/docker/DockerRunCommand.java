@@ -31,6 +31,7 @@ public class DockerRunCommand {
   private long memory;
   // exit auto rm container
   private boolean rmMode;
+  private String name;
 
   private static void buildParam(StringBuilder sb, String param, String value) {
     if (StringUtils.isNotEmpty(value)) {
@@ -53,6 +54,7 @@ public class DockerRunCommand {
     buildParam(sb, "--rm", rmMode);
     buildParam(sb, "-P", exposeAll);
     buildParam(sb, "-w=", workerDir);
+    buildParam(sb, "--name=", name);
     buildParam(sb, "-m=", String.valueOf(memory * 1024 * 1024)); // mb -> bytes
     buildParam(sb, "-c=", String.valueOf(cpuCores));
     buildParam(sb, "--entrypoint=", entrypoint);

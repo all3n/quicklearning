@@ -8,4 +8,5 @@ public class Constants {
   public final static String ENV_DIR = "env";
 
   public static final String BANNER = "banner.txt";
+  public static final String ENV_APP_ID = "APPLICATION_ID";
 }

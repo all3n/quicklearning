@@ -1,6 +1,7 @@
 package com.devhc.quicklearning.apps.xdl;
 
 import com.devhc.quicklearning.apps.xdl.XdlConfigJson.AutoRebalance;
+import com.devhc.quicklearning.apps.xdl.XdlConfigJson.Checkpoint;
 import com.devhc.quicklearning.apps.xdl.XdlConfigJson.RoleResource;
 import com.devhc.quicklearning.beans.JobConfigJson;
 import com.google.common.base.Preconditions;
@@ -31,6 +32,11 @@ public class XdlConfigConvertor {
     autoRebalance.enable = false;
     autoRebalance.meta_dir = null;
     xc.auto_rebalance = autoRebalance;
+
+
+    xc.checkpoint = new Checkpoint();
+    xc.checkpoint.output_dir = config.getCheckpoint_dir();
+
 
     xc.job_name = config.getJob_name();
     xc.script = config.getScript();

@@ -16,6 +16,7 @@ public class XdlConfigJson {
     public long memory_m = 4096;
   }
 
+  @Data
   public static class ExtendRoleResource {
 
     public int instance_num = 4;
@@ -26,6 +27,7 @@ public class XdlConfigJson {
     public boolean xdl_worker = false;
   }
 
+  @Data
   public static class AutoRebalance {
 
     public boolean enable = false;
@@ -33,6 +35,7 @@ public class XdlConfigJson {
   }
 
 
+  @Data
   public static class Checkpoint {
 
     public String output_dir = null;

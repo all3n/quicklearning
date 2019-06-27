@@ -5,6 +5,7 @@
         {{ info.jobId }}
         <el-tag :type="info.status | statusFilter">{{ info.status }}</el-tag>
       </h3>
+      <h3>{{info.lastUpdate}}</h3>
       <el-table :data="info.job | obj2arr" style="width: 100%">
         <el-table-column prop="name" label="name" width="200" />
         <el-table-column prop="value" label="value" width="600" />

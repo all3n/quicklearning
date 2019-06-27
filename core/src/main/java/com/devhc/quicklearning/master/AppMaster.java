@@ -33,16 +33,12 @@ public class AppMaster {
 
   BaseApp app;
 
-  @Inject
-  JobConfigJson jobConfig;
-
 
   @Inject
   public AppMaster(MasterArgs args, BaseApp app, BaseScheduler scheduler) throws Exception {
     this.args = args;
     this.scheduler = scheduler;
     this.app = app;
-    app.setAppId(scheduler.getAppId());
     LOG.info("master args:{}", args);
 
     try {
@@ -51,6 +47,13 @@ public class AppMaster {
       e.printStackTrace();
     }
     scheduler.init();
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      try {
+        stop();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }));
   }
 
   public void start() throws Exception {
@@ -59,7 +62,7 @@ public class AppMaster {
     LOG.info("web listen {}:{}", webServer.getHost(), webServer.getPort());
     rpcServer.start();
 
-    boolean res = scheduler.start();
+    scheduler.start();
     if (args.getStopAtFinished() == 1) {
       this.stop();
     }

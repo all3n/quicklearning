@@ -11,5 +11,6 @@ public class JobMeta {
   private String jobId;
   private String status;
   private AppContainers containers;
+  private Long lastUpdate;
 
 }

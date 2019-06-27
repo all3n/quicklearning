@@ -14,6 +14,7 @@ public class WebServer {
   private final JerseyServer server;
   private String host;
   private Logger LOG = LoggerFactory.getLogger(WebServer.class);
+  private volatile boolean isRunning;
   MasterArgs args;
 
 
@@ -48,6 +49,7 @@ public class WebServer {
 
   public void start() throws Exception {
     server.start();
+    isRunning = true;
   }
 
   public void join() throws Exception {
@@ -56,7 +58,10 @@ public class WebServer {
 
 
   public void stop() throws Exception {
-    server.stop();
+    if(isRunning) {
+      server.stop();
+      isRunning = false;
+    }
   }
 
 }

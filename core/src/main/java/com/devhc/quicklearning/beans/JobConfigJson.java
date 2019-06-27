@@ -8,8 +8,10 @@ public class JobConfigJson {
 
   public String jobType;
   private String script;
+  private String checkpoint_dir;
 
 
+  @Data
   public static class RoleResource {
     public int instance_num = 1;
     public int cpu_cores = 4;

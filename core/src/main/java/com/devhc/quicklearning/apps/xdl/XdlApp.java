@@ -4,14 +4,15 @@ import com.devhc.quicklearning.apps.AppJob;
 import com.devhc.quicklearning.apps.AppResource;
 import com.devhc.quicklearning.apps.BaseApp;
 import com.devhc.quicklearning.master.MasterArgs;
+import com.devhc.quicklearning.scheduler.BaseScheduler;
 import com.devhc.quicklearning.utils.Constants;
 import com.devhc.quicklearning.beans.JobConfigJson;
-import com.devhc.quicklearning.beans.JobConfigJson.RoleResource;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import lombok.var;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,14 +22,16 @@ public class XdlApp extends BaseApp {
 
   private static Logger LOG = LoggerFactory.getLogger(XdlApp.class);
 
-  @Inject
   private JobConfigJson conf;
   private ArrayList<AppJob> appJobs;
-  private String user = "a";
   private String config;
-  private String args;
-  private String port;
-  private String appId;
+  @Inject
+  BaseScheduler scheduler;
+
+  public static AppResource DEFAULT_RES = AppResource.builder()
+      .instance(1)
+      .memory(4096).vcore(4)
+      .build();
 
   @Inject
   public XdlApp(MasterArgs args, JobConfigJson conf) {
@@ -37,45 +40,36 @@ public class XdlApp extends BaseApp {
     intAppContainers();
   }
 
+  public static AppJob getTypeJob(JobConfigJson conf, String type) {
+    AppJob aj;
+    boolean isWorker = true;
+    if (type.equals("scheduler") || type.equals("ps")) {
+      isWorker = false;
+    }
+    if (conf.jobs != null && conf.jobs.containsKey(type)) {
+      var r = conf.jobs.get(type);
+      aj = AppJob.builder().type(type)
+          .resource(AppResource.builder()
+              .vcore(r.cpu_cores).gpu(r.gpu_cores).memory(r.memory_m).instance(r.instance_num)
+              .build()).isWorker(isWorker)
+          .entry(r.entry)
+          .build();
+    } else {
+      LOG.info("{} res not set,use default {}", type, DEFAULT_RES);
+      aj = AppJob.builder().type(type).
+          resource(DEFAULT_RES).isWorker(isWorker)
+          .build();
+    }
+
+    return aj;
+  }
 
   private void intAppContainers() {
     this.appJobs = Lists.newArrayList();
     // scheduler
-    AppJob schedulerContainer = AppJob.builder().type("scheduler").
-        resource(AppResource.builder().instance(1).memory(4096).vcore(4).build()).isWorker(false)
-        .build();
-    appJobs.add(schedulerContainer);
-
-    if (conf.jobs != null && conf.jobs.containsKey("worker")) {
-      if (conf.jobs.containsKey("ps")) {
-        RoleResource ps = conf.jobs.get("ps");
-        // ps
-        AppJob psContainer = AppJob.builder().type("ps").
-            resource(AppResource.builder().
-                instance(ps.instance_num).
-                memory(ps.memory_m).
-                vcore(ps.cpu_cores)
-                .gpu(ps.gpu_cores).build()).isWorker(false)
-            .build();
-        appJobs.add(psContainer);
-      }
-      RoleResource worker = conf.jobs.get("worker");
-      // worker
-      AppJob workerContainer = AppJob.builder().type("worker").
-          resource(AppResource.builder().
-              instance(worker.instance_num).
-              memory(worker.memory_m).
-              vcore(worker.cpu_cores)
-              .gpu(worker.gpu_cores)
-              .build())
-          .entry(worker.entry)
-          .isWorker(true)
-          .build();
-
-      appJobs.add(workerContainer);
-    } else {
-      throw new RuntimeException("conf must has jobs, jobs must has  worker");
-    }
+    appJobs.add(getTypeJob(conf, "scheduler"));
+    appJobs.add(getTypeJob(conf, "ps"));
+    appJobs.add(getTypeJob(conf, "worker"));
   }
 
   @Override
@@ -87,11 +81,12 @@ public class XdlApp extends BaseApp {
   public String genCmds(AppJob job, int index, String suffix) {
     // if job has entry use job first,else globa script
     String entry = job.getEntry() == null ? conf.getScript() : job.getEntry();
+    entry = "python " + entry;
 
-    return genCmd(user, String.valueOf(index),
+    return genCmd(job.getResource(), getUser(), String.valueOf(index),
         job.getType(),
         config,
-        port, args, entry) + " " + suffix;
+        "", entry) + " " + suffix;
   }
 
   @Override
@@ -100,18 +95,18 @@ public class XdlApp extends BaseApp {
   }
 
 
-  private String genCmd(String xdlUser, String workIndex, String workType, String config,
-      String port, String args, String entry) {
+  private String genCmd(AppResource resource, String xdlUser,
+      String workIndex, String workType, String config,
+      String args, String entry) {
     String containerClazz = XdlContainerRunner.class.getName();
+    String cudaArgs = resource.getGpu() > 0 ? " -cd=" + "GPU_LIST_PLACEHOLDER" : "";
     String command =
-//        "$JAVA_HOME/bin/java" + " -Xmx256M "
         "bash " + Constants.QUICK_LEARNING_DIR + "/bin/" + Constants.YARN_START_SCRIPT + " "
             + containerClazz + " -c=" + config + " -j=" + workType
             + " -i=" + workIndex + " -u="
             + xdlUser
-            + " -cpuset=_CPU_LIST_" + " -cd=" + "GPU_LIST_PLACEHOLDER" + (
-            port == null ? "" : (" -xp=" + port))
-            + " --appId " + appId
+            + " -cpuset=_CPU_LIST_" + cudaArgs
+            + " --appId " + scheduler.getAppId()
             + " --entry '" + entry + "'"
             + (StringUtils.isNotEmpty(args) ? " -args='" + args + "' " : "");
     LOG.info("container start command is {} ", command);

@@ -38,7 +38,7 @@ public class HdfsMetaLoader extends MetaLoader {
         .sorted(Comparator.comparingLong(HistoryJob::getTimestamp).reversed())
         .collect(Collectors.toList());
 
-    var totalPages = (int) Math.ceil(listSt.length / pageRequest.getPageSize());
+    var totalPages = (int) Math.ceil((float) listSt.length / pageRequest.getPageSize());
     var curPage = Math.min(Math.max(pageRequest.getCurrent(), 0),totalPages);
     pageRequest.setCurrent(curPage);
     var pageSize = Math.max(pageRequest.getPageSize(), 1);

@@ -83,10 +83,14 @@ public class YarnScheduler extends BaseScheduler {
   private int totalFinishNum = 0;
   private int successWorkerNum = 0;
   private int failWorkerNum = 0;
+  private int failJobNum = 0;
   private String metaFile;
-  private String appId;
   private ContainerId appContainerId;
   private JobMeta meta;
+  private Map<String, AppJob> typeJob = Maps.newTreeMap();
+  private Thread launchContainerThread;
+  private volatile boolean isRunning;
+
 
   public YarnResourceAllocator getYarnResourceAlloctor() {
     return yarnResourceAlloctor;
@@ -99,12 +103,11 @@ public class YarnScheduler extends BaseScheduler {
     String appMasterCid = envs.get(Environment.CONTAINER_ID.toString());
     this.appContainerId = ContainerId.fromString(appMasterCid);
     this.appId = appContainerId.getApplicationAttemptId().getApplicationId().toString();
+    appEnvs.put(Constants.ENV_APP_ID, appId);
     String metaDir = conf.get(QuickLearningConf.META_CONFIG) + "/" + appId;
     this.metaFile = metaDir + "/" + "meta.json";
     var fs = FileSystem.get(conf);
     fs.mkdirs(new Path(metaDir));
-
-//    String userName = UserGroupInformation.getCurrentUser().getUserName();
 
     String userName = envs.get(Environment.USER.toString());
 //    LOG.info("User:{}", userName);
@@ -122,14 +125,29 @@ public class YarnScheduler extends BaseScheduler {
       this.webProxyBase = envs.get(ApplicationConstants.APPLICATION_WEB_PROXY_BASE_ENV);
     }
 
-
     String nmHttpPort = envs.get(Environment.NM_HTTP_PORT.toString());
-    this.yarnResourceAlloctor = new YarnResourceAllocator();
+    this.yarnResourceAlloctor = new YarnResourceAllocator(app);
+    yarnResourceAlloctor.setCmdSuffix(cmdSuffix);
     yarnResourceAlloctor.setUserName(userName);
 
     app.setMasterLink(String
         .format("http://%s:%s/node/containerlogs/%s/%s", applicationMasterHostname, nmHttpPort,
             appMasterCid, userName));
+
+    this.launchContainerThread = new Thread(() -> {
+      while (isRunning) {
+        try {
+          var yc = yarnResourceAlloctor.getContainerQueue().take();
+          if (yc.getContainer() != null) {
+            LOG.info("launch {}", yc);
+            launchContainer(yc.getContainer(), Collections.singletonList(yc.getCmd()));
+          }
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+      }
+      LOG.info("launch container thread stop");
+    });
 
     // set meta
     meta = JobMeta.builder()
@@ -137,7 +155,7 @@ public class YarnScheduler extends BaseScheduler {
         .jobId(appId)
         .status("RUNNING")
         .build();
-
+    updateMeta(getMeta());
   }
 
   @Override
@@ -153,12 +171,9 @@ public class YarnScheduler extends BaseScheduler {
     return meta;
   }
 
-  @Override
-  public String getAppId() {
-    return appId;
-  }
 
   public void updateMeta(JobMeta meta) throws IOException {
+    meta.setLastUpdate(System.currentTimeMillis());
     var fs = FileSystem.get(conf);
     var outs = fs.create(new Path(metaFile), true);
     try (var writer = new PrintWriter(outs)) {
@@ -171,29 +186,23 @@ public class YarnScheduler extends BaseScheduler {
 
   @Override
   public boolean start() throws Exception {
+    isRunning = true;
     initClients();
     register();
     initResources();
     initAppEnvs();
     List<AppJob> apps = app.getAppContainerInfo();
-    yarnResourceAlloctor.initAllocator(apps);
     this.totalWorkerNum = 0;
-    for (int i = 0; i < apps.size(); i++) {
-      AppJob appJob = apps.get(i);
+    for (AppJob appJob : apps) {
       int instanceNum = appJob.getResource().getInstance();
       if (appJob.isWorker()) {
         totalWorkerNum += instanceNum;
       }
-
-      for (int ci = 0; ci < instanceNum; ci++) {
-        String cmd = app.genCmds(appJob, ci, cmdSuffix);
-        Container container = yarnResourceAlloctor.getContainer(appJob.getType(), ci);
-        LOG.info("launch {} {} container:{}", ci, appJob, container);
-        if (container != null) {
-          launchContainer(container, Collections.singletonList(cmd));
-        }
-      }
+      typeJob.put(appJob.getType(), appJob);
     }
+    launchContainerThread.start();
+    yarnResourceAlloctor.initAllocator(typeJob);
+    updateMeta(getMeta());
     boolean isSuccess = waitJobFinished();
     this.processExit(isSuccess);
     return isSuccess;
@@ -207,7 +216,7 @@ public class YarnScheduler extends BaseScheduler {
     }
   }
 
-  private boolean waitJobFinished() throws IOException, YarnException, InterruptedException {
+  private boolean waitJobFinished() throws Exception {
     this.successWorkerNum = 0;
     float deltaResponse = 1.0f / totalWorkerNum;
     float responseId = 0.01f;
@@ -217,21 +226,38 @@ public class YarnScheduler extends BaseScheduler {
       responseId = deltaResponse * successWorkerNum;
       Thread.sleep(1000);
       LOG.info("successWorkerNum:{}", successWorkerNum);
-      if ((failWorkerNum / (float) totalWorkerNum) > 0.75f) {
-        LOG.info("fail rate > 0.75");
+      if (isJobShouldFailExit()) {
         success = false;
         break;
       }
     }
+
     var meta = getMeta();
     meta.setStatus(success ? "SUCCESS" : "FAIL");
     updateMeta(meta);
-    LOG.info("job finished!");
+    LOG.info("success:{} fail:{} finish:{} total:{} job finished!", successWorkerNum, failWorkerNum,
+        totalFinishNum, totalWorkerNum);
     return success;
   }
 
+
+  public boolean isJobShouldFailExit() {
+    boolean shouldExit = false;
+    // worker fail rate is high
+    if ((failWorkerNum / (float) totalWorkerNum) > 0.75f) {
+      LOG.info("fail rate > 0.75");
+      shouldExit = true;
+    }
+
+    if (failJobNum > jobConfig.max_failover_times) {
+      LOG.info("fail job num > {} max failover times", jobConfig.max_failover_times);
+      shouldExit = true;
+    }
+    return shouldExit;
+  }
+
   private void processResponse(List<ContainerStatus> completedContainersStatuses)
-      throws IOException {
+      throws Exception {
     if (completedContainersStatuses.size() == 0) {
       return;
     }
@@ -246,7 +272,22 @@ public class YarnScheduler extends BaseScheduler {
         rmClient.releaseAssignedContainer(cid);
       } else {
         yarnResourceAlloctor.failContainer(cid);
+        if (failJobNum < jobConfig.max_failover_times) {
+          yarnResourceAlloctor.retryJob(cinfo);
+
+//          String cmd = app.genCmds(, ci, cmdSuffix);
+          String cmd = "";
+          Container container = yarnResourceAlloctor
+              .getContainer(cinfo.getType(), cinfo.getIndex());
+//          LOG.info("launch {} {} container:{}", ci, appJob, container);
+          if (container != null) {
+            launchContainer(container, Collections.singletonList(cmd));
+          }
+
+          failJobNum += 1;
+        }
       }
+
       if (cinfo.getType().equals("worker")) {
         if (cs.getExitStatus() == 0) {
           successWorkerNum += 1;
@@ -269,7 +310,6 @@ public class YarnScheduler extends BaseScheduler {
           c.trim(),
           javaPathSeparator);
     }
-    Apps.addToEnvironment(appEnvs,"APPLICATION_ID", appId);
 
     LOG.info("JAVA CLASS_PATH is " + System.getProperty("java.class.path"));
   }
@@ -337,13 +377,17 @@ public class YarnScheduler extends BaseScheduler {
 
   @Override
   public void stop() throws Exception {
+    isRunning = false;
     LOG.info("stop yarn scheduler");
+    updateMeta(getMeta());
     if (rmClient != null) {
       rmClient.unregisterApplicationMaster(FinalApplicationStatus.SUCCEEDED, "", "");
       rmClient.stop();
+      rmClient = null;
     }
     if (nmClient != null) {
       nmClient.close();
+      nmClient = null;
     }
   }
 

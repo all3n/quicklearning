@@ -39,5 +39,7 @@ public class XdlArgs {
   @Option(name = "-e", aliases = "--entry", usage = "entry script")
   private String entry;
 
+  @Option(name = "-rm", aliases = "--remove", usage = "remove docker if exit")
+  private boolean dockerNeedRemove;
 
 }

@@ -3,8 +3,11 @@ package com.devhc.quicklearning.scheduler;
 
 import com.devhc.quicklearning.apps.AppContainers;
 import com.devhc.quicklearning.beans.JobMeta;
+import lombok.Getter;
 
 public abstract class BaseScheduler {
+  @Getter
+  protected String appId;
 
   public boolean start() throws Exception {
     return false;
@@ -24,7 +27,5 @@ public abstract class BaseScheduler {
     return JobMeta.builder().build();
   }
 
-  public String getAppId() {
-    return "appid";
-  }
+
 }
