@@ -16,6 +16,15 @@
   <packaging>pom</packaging>
   <name>quick learning</name>
   <description>quick learning</description>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <java.version>1.8</java.version>
+    <hadoop.scope>provided</hadoop.scope>
+    <hadoop.version>3.1.2</hadoop.version>
+    <guice.version>4.2.2</guice.version>
+    <guava.version>22.0</guava.version>
+  </properties>
   <build>
     <plugins></plugins>
     <pluginManagement>
@@ -33,13 +42,7 @@
       </plugins>
     </pluginManagement>
   </build>
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <java.version>1.8</java.version>
-    <hadoop.scope>provided</hadoop.scope>
-    <hadoop.version>3.1.2</hadoop.version>
-  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.projectlombok</groupId>
@@ -49,7 +52,18 @@
     </dependency>
   </dependencies>
   <dependencyManagement>
-    <dependencies></dependencies>
+    <dependencies>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>${guava.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.inject</groupId>
+        <artifactId>guice</artifactId>
+        <version>${guice.version}</version>
+      </dependency>
+    </dependencies>
   </dependencyManagement>
   <repositories>
     <repository>

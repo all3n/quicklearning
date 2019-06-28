@@ -6,9 +6,10 @@
   <includeBaseDirectory>false</includeBaseDirectory>
   <dependencySets>
     <dependencySet>
-      <useProjectArtifact>true</useProjectArtifact>
+      <outputDirectory>/libs</outputDirectory>
+      <useProjectArtifact>false</useProjectArtifact>
       <includes>
-        <include>com.devhc.quicklearning:*</include>
+<!--        <include>com.devhc.quicklearning:quicklearning-assembly</include>-->
       </includes>
     </dependencySet>
   </dependencySets>
@@ -16,6 +17,10 @@
     <fileSet>
       <outputDirectory>conf</outputDirectory>
       <directory>${project.parent.basedir}/config/${deploy.app}</directory>
+    </fileSet>
+    <fileSet>
+      <outputDirectory>conf</outputDirectory>
+      <directory>${project.parent.basedir}/assembly/target/quicklearning-assembly*.jar</directory>
     </fileSet>
     <fileSet>
       <outputDirectory>bin</outputDirectory>
@@ -35,5 +40,10 @@
       <directory>${project.parent.basedir}/public/target/historyserver</directory>
     </fileSet>
   </fileSets>
+  <containerDescriptorHandlers>
+    <containerDescriptorHandler>
+      <handlerName>metaInf-services</handlerName>
+    </containerDescriptorHandler>
+  </containerDescriptorHandlers>
 </assembly>
 

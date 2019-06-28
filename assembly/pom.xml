@@ -8,7 +8,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <relativePath>../</relativePath>
   </parent>
-  <packaging>pom</packaging>
+  <packaging>jar</packaging>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>quicklearning-assembly</artifactId>
   <version>0.0.1-SNAPSHOT</version>
@@ -29,7 +29,7 @@
     </dependency>
      <dependency>
       <groupId>com.devhc.quicklearning</groupId>
-      <artifactId>quicklearning-apps</artifactId>
+      <artifactId>quicklearning-apps-xdl</artifactId>
       <version>0.0.1-SNAPSHOT</version>
     </dependency>
   </dependencies>
@@ -38,6 +38,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
+        <version>3.1.1</version>
         <configuration>
           <descriptors>
             <descriptor>src/main/assembly/${deploy.app}.xml</descriptor>
@@ -56,7 +57,61 @@
         </executions>
       </plugin>
 
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <createDependencyReducedPom>false</createDependencyReducedPom>
+              <artifactSet>
+                <excludes>
+                  <!-- exclude jackson 1-->
+                  <exclude>org.codehaus.jackson:*</exclude>
+                </excludes>
+              </artifactSet>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+              <relocations>
 
+                <relocation>
+                  <pattern>com.google</pattern>
+                  <shadedPattern>${project.groupId}.shaded.com.google</shadedPattern>
+                </relocation>
+
+                <relocation>
+                  <pattern>io.netty</pattern>
+                  <shadedPattern>${project.groupId}.shaded.io.netty</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>io.grpc</pattern>
+                  <shadedPattern>${project.groupId}.shaded.io.grpc</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>META-INF/native/libnetty</pattern>
+                  <shadedPattern>META-INF/native/libcom_anaconda_skein_shaded_netty</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>META-INF/native/netty</pattern>
+                  <shadedPattern>META-INF/native/com_anaconda_skein_shaded_netty</shadedPattern>
+                </relocation>
+              </relocations>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 </project>

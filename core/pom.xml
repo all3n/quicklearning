@@ -16,10 +16,10 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jackson.version>2.9.9</jackson.version>
     <jetty.version>9.4.18.v20190429</jetty.version>
-    <guice.version>4.2.2</guice.version>
+
     <jersey.version>2.28</jersey.version>
     <hk2-bridge.version>2.5.0</hk2-bridge.version>
-    <guava.version>22.0</guava.version>
+
     <grpc.version>1.16.0</grpc.version>
     <boringssl.version>2.0.17.Final</boringssl.version>
 
@@ -216,59 +216,6 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <phase>package</phase>
-            <configuration>
-              <createDependencyReducedPom>false</createDependencyReducedPom>
-              <artifactSet>
-                <excludes>
-                  <!-- exclude jackson 1-->
-                  <exclude>org.codehaus.jackson:*</exclude>
-                </excludes>
-              </artifactSet>
-              <filters>
-                <filter>
-                  <artifact>*:*</artifact>
-                  <excludes>
-                    <exclude>META-INF/*.SF</exclude>
-                    <exclude>META-INF/*.DSA</exclude>
-                    <exclude>META-INF/*.RSA</exclude>
-                  </excludes>
-                </filter>
-              </filters>
-              <relocations>
-                <relocation>
-                  <pattern>com.google</pattern>
-                  <shadedPattern>${project.groupId}.shaded.com.google</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>io.netty</pattern>
-                  <shadedPattern>${project.groupId}.shaded.io.netty</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>io.grpc</pattern>
-                  <shadedPattern>${project.groupId}.shaded.io.grpc</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>META-INF/native/libnetty</pattern>
-                  <shadedPattern>META-INF/native/libcom_anaconda_skein_shaded_netty</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>META-INF/native/netty</pattern>
-                  <shadedPattern>META-INF/native/com_anaconda_skein_shaded_netty</shadedPattern>
-                </relocation>
-              </relocations>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>org.xolstice.maven.plugins</groupId>
         <artifactId>protobuf-maven-plugin</artifactId>
         <version>0.5.1</version>
@@ -346,21 +293,13 @@
         <artifactId>javax.servlet-api</artifactId>
         <version>3.1.0</version>
       </dependency>
-      <dependency>
-        <groupId>com.google.inject</groupId>
-        <artifactId>guice</artifactId>
-        <version>${guice.version}</version>
-      </dependency>
+
       <dependency>
         <groupId>com.google.inject.extensions</groupId>
         <artifactId>guice-servlet</artifactId>
         <version>${guice.version}</version>
       </dependency>
-      <dependency>
-        <groupId>com.google.guava</groupId>
-        <artifactId>guava</artifactId>
-        <version>${guava.version}</version>
-      </dependency>
+
     </dependencies>
   </dependencyManagement>
 </project>
