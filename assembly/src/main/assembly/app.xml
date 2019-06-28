@@ -8,7 +8,7 @@
     <dependencySet>
       <useProjectArtifact>true</useProjectArtifact>
       <includes>
-        <include>com.devhc.quicklearning:quicklearning-core</include>
+        <include>com.devhc.quicklearning:*</include>
       </includes>
     </dependencySet>
   </dependencySets>

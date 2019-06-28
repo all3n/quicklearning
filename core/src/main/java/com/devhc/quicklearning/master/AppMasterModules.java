@@ -1,20 +1,21 @@
 package com.devhc.quicklearning.master;
 
 import com.devhc.quicklearning.apps.BaseApp;
-import com.devhc.quicklearning.apps.xdl.XdlApp;
 import com.devhc.quicklearning.controllers.IndexController;
 import com.devhc.quicklearning.scheduler.BaseScheduler;
 import com.devhc.quicklearning.scheduler.LocalScheduler;
-import com.devhc.quicklearning.scheduler.yarn.YarnScheduler;
 import com.devhc.quicklearning.server.jersey.JerseyModule;
 import com.devhc.quicklearning.server.jersey.configuration.JerseyConfiguration;
 import com.devhc.quicklearning.server.rpc.RpcModule;
 import com.devhc.quicklearning.server.rpc.RpcServerConfig;
+import com.devhc.quicklearning.utils.ArgsUtils;
+import com.devhc.quicklearning.utils.CommonUtils;
 import com.devhc.quicklearning.utils.JsonUtils;
 import com.devhc.quicklearning.beans.JobConfigJson;
-import com.devhc.quicklearning.utils.JobUtils;
+import com.google.common.base.Preconditions;
 import com.google.inject.AbstractModule;
 import javax.inject.Singleton;
+import org.apache.commons.lang.StringUtils;
 
 public class AppMasterModules extends AbstractModule {
 
@@ -22,7 +23,7 @@ public class AppMasterModules extends AbstractModule {
   private final MasterArgs masterArgs;
 
   public AppMasterModules(String args[]) {
-    masterArgs = JobUtils.parseArgument(new MasterArgs(), args);
+    masterArgs = ArgsUtils.parseArgument(new MasterArgs(), args);
   }
 
   @Override
@@ -31,11 +32,10 @@ public class AppMasterModules extends AbstractModule {
     bind(MasterArgs.class).toInstance(masterArgs);
     bind(JobConfigJson.class).toInstance(
         JsonUtils.parseJson(masterArgs.getConfigFile(), JobConfigJson.class));
-    if(masterArgs.getAppType().equals("xdl")){
-      bind(BaseApp.class).to(XdlApp.class).in(Singleton.class);
-    }else{
-//      throw new RuntimeException(masterArgs.getAppType()+" is not support");
-    }
+
+    Class appClazz = CommonUtils.genClass(BaseApp.class, masterArgs.getAppType(), "App");
+    Preconditions.checkNotNull(appClazz, masterArgs.getAppType() + " not exist");
+    bind(BaseApp.class).to(appClazz).in(Singleton.class);
 
     // config rest web jersey server
     JerseyConfiguration configuration = JerseyConfiguration.builder()
@@ -56,12 +56,13 @@ public class AppMasterModules extends AbstractModule {
 
     install(new RpcModule(rpcServerConfig, new AppRpcServerImpl()));
 
-
-
-    if (masterArgs.getScheduler().equals("yarn")) {
-      bind(BaseScheduler.class).to(YarnScheduler.class).in(Singleton.class);
-    } else {
+    if (masterArgs.getScheduler().equals("local")) {
       bind(BaseScheduler.class).to(LocalScheduler.class).in(Singleton.class);
+    } else {
+      Class schedulerClazz = CommonUtils
+          .genClass(BaseScheduler.class, masterArgs.getScheduler(), "Scheduler");
+      Preconditions.checkNotNull(schedulerClazz, "scheduler class not exist");
+      bind(BaseScheduler.class).to(schedulerClazz).in(Singleton.class);
     }
   }
 }

@@ -34,28 +34,7 @@ public class JobUtils {
   public static final String HDFS_XDL_WORK_DIR = ".quicklearning";
   public static final String HDFS_PYTHON_DIR = "python";
 
-  public static String getName(String filePath) {
-    return new Path(filePath).getName();
-  }
 
-  public static String getCurUser() {
-    return System.getProperty("user.name");
-  }
-
-
-  public static String getCurUId() {
-    String uid = "";
-    try {
-      String curUser = getCurUser();
-      Process pr2 = Runtime.getRuntime().exec("id -u " + curUser);
-      BufferedReader input2 = new BufferedReader(new InputStreamReader(pr2.getInputStream()));
-      uid = StringUtils.strip(input2.readLine());
-      LOG.info("get current user " + curUser + " uid:" + uid);
-    } catch (Exception e) {
-      LOG.error(e.toString());
-    }
-    return uid;
-  }
 
 
   public static String genAppBasePath(
@@ -163,21 +142,9 @@ public class JobUtils {
   }
 
 
-  public static <T> T parseArgument(T obj, String args[]) {
-    CmdLineParser parser = new CmdLineParser(obj);
-    try {
-      parser.parseArgument(args);
-    } catch (CmdLineException e) {
-      e.printStackTrace();
-      parser.printUsage(System.err);
-      System.exit(-1);
-    }
-    return obj;
-  }
 
 
-  public String convertArchiveName(String fileName) {
-    return fileName.substring(0, fileName.indexOf("."));
-  }
+
+
 
 }

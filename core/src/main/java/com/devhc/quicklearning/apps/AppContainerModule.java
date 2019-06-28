@@ -1,6 +1,6 @@
 package com.devhc.quicklearning.apps;
 
-import com.devhc.quicklearning.utils.JobUtils;
+import com.devhc.quicklearning.utils.ArgsUtils;
 import com.google.inject.AbstractModule;
 import lombok.Getter;
 
@@ -12,7 +12,7 @@ public class AppContainerModule<T > extends AbstractModule {
   public AppContainerModule(String args[], Class<T> argClazz){
     try {
       this.argClazz = argClazz;
-      appArgs = JobUtils.parseArgument(argClazz.newInstance(), args);
+      appArgs = ArgsUtils.parseArgument(argClazz.newInstance(), args);
 
     } catch (Exception e) {
       e.printStackTrace();
