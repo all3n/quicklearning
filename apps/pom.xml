@@ -5,7 +5,6 @@
         <artifactId>quicklearning</artifactId>
         <groupId>com.devhc.quicklearning</groupId>
         <version>0.0.1-SNAPSHOT</version>
-        <relativePath>../</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>quicklearning-apps</artifactId>
@@ -19,11 +18,10 @@
             <artifactId>quicklearning-scheduler-yarn</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
-
         <dependency>
-        <groupId>org.apache.commons</groupId>
-        <artifactId>commons-io</artifactId>
-        <version>1.3.2</version>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>1.3.2</version>
         </dependency>
     </dependencies>
 </project>

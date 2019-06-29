@@ -6,10 +6,10 @@
   <includeBaseDirectory>false</includeBaseDirectory>
   <dependencySets>
     <dependencySet>
-      <outputDirectory>/libs</outputDirectory>
+      <outputDirectory>/</outputDirectory>
       <useProjectArtifact>false</useProjectArtifact>
       <includes>
-<!--        <include>com.devhc.quicklearning:quicklearning-assembly</include>-->
+        <include>com.devhc.quicklearning:quicklearning-shade</include>
       </includes>
     </dependencySet>
   </dependencySets>
@@ -17,10 +17,6 @@
     <fileSet>
       <outputDirectory>conf</outputDirectory>
       <directory>${project.parent.basedir}/config/${deploy.app}</directory>
-    </fileSet>
-    <fileSet>
-      <outputDirectory>conf</outputDirectory>
-      <directory>${project.parent.basedir}/assembly/target/quicklearning-assembly*.jar</directory>
     </fileSet>
     <fileSet>
       <outputDirectory>bin</outputDirectory>
@@ -32,11 +28,11 @@
       <directory>${project.parent.basedir}/conf</directory>
     </fileSet>
     <fileSet>
-        <outputDirectory>/web/appmaster</outputDirectory>
+      <outputDirectory>/web/appmaster</outputDirectory>
       <directory>${project.parent.basedir}/public/target/appmaster</directory>
     </fileSet>
     <fileSet>
-        <outputDirectory>/web/historyserver</outputDirectory>
+      <outputDirectory>/web/historyserver</outputDirectory>
       <directory>${project.parent.basedir}/public/target/historyserver</directory>
     </fileSet>
   </fileSets>
@@ -46,4 +42,3 @@
     </containerDescriptorHandler>
   </containerDescriptorHandlers>
 </assembly>
-

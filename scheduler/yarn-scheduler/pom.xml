@@ -5,12 +5,10 @@
         <artifactId>quicklearning-scheduler</artifactId>
         <groupId>com.devhc.quicklearning</groupId>
         <version>0.0.1-SNAPSHOT</version>
-        <relativePath>../</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>quicklearning-scheduler-yarn</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-
     <dependencies>
         <!-- hadoop support -->
         <dependency>
@@ -62,13 +60,11 @@
             </exclusions>
         </dependency>
         <!-- hadoop end -->
-
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-minicluster</artifactId>
             <version>${hadoop.version}</version>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
 </project>
