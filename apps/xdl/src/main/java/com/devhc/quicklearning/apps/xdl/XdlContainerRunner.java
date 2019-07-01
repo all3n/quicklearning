@@ -5,6 +5,7 @@ import com.devhc.quicklearning.conf.QuickLearningConf;
 import com.devhc.quicklearning.docker.DockerManager;
 import com.devhc.quicklearning.docker.DockerRunCommand;
 import com.devhc.quicklearning.utils.CmdUtils;
+import com.devhc.quicklearning.utils.CommonUtils;
 import com.devhc.quicklearning.utils.Constants;
 import com.devhc.quicklearning.beans.JobConfigJson;
 import com.devhc.quicklearning.utils.JobUtils;
@@ -27,8 +28,6 @@ import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.yarn.api.ApplicationConstants.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.misc.Signal;
-import sun.misc.SignalHandler;
 
 /**
  * @author wanghuacheng this  script run in master alloc containers
@@ -50,20 +49,7 @@ public class XdlContainerRunner {
   private String hdfsBase;
   private String dockerContainerId;
   protected volatile boolean stoped = false;
-  private static class RunnerSignalHandler implements SignalHandler {
-    private static Logger LOG = LoggerFactory.getLogger(RunnerSignalHandler.class);
 
-    private XdlContainerRunner runner = null;
-
-    public RunnerSignalHandler(XdlContainerRunner runner) {
-      this.runner = runner;
-    }
-
-    public void handle(Signal signal) {
-      LOG.info("Container is killed by signal:{}.", signal.getNumber());
-      this.runner.shutdown(true);
-    }
-  }
 
 
   public static void main(String[] args) {
@@ -75,18 +61,7 @@ public class XdlContainerRunner {
       XdlContainerRunner runner = Guice.createInjector(moduleList)
           .getInstance(XdlContainerRunner.class);
 
-      Runtime.getRuntime().addShutdownHook(new Thread() {
-        @Override
-        public void run() {
-          runner.shutdown(false);
-        }
-      });
-
-
-      RunnerSignalHandler signalHandler = new RunnerSignalHandler(runner);
-      Signal.handle(new Signal("TERM"), signalHandler);
-      Signal.handle(new Signal("INT"), signalHandler);
-
+      Runtime.getRuntime().addShutdownHook(new Thread(runner::shutdown));
 
       System.exit(runner.start());
     } catch (Exception e) {
@@ -95,7 +70,7 @@ public class XdlContainerRunner {
     }
   }
 
-  private synchronized void shutdown(boolean kill) {
+  private synchronized void shutdown() {
     if (stoped) {
       return;
     }
@@ -144,17 +119,7 @@ public class XdlContainerRunner {
   }
 
 
-  public String wrapWithCreateUser(String workDir, String entry, String args) {
-    String uid = JobUtils.getCurUId();
-    String jobCmd;
-    if (StringUtils.isNotEmpty(uid)) {
-      jobCmd = String.format("useradd -u %s %s;su %s -c 'source /etc/profile && cd %s && %s %s'",
-          uid, user, user, workDir, entry, args == null ? "" : args);
-    } else {
-      jobCmd = entry;
-    }
-    return jobCmd;
-  }
+
 
   private int runScriptInDocker() throws IOException {
     String jobType = args.getJobType();
@@ -176,7 +141,7 @@ public class XdlContainerRunner {
     var sf = new File(script);
     ArrayList<String> lines = Lists.newArrayList();
 
-    String uid = JobUtils.getCurUId();
+    String uid = CommonUtils.getCurUId();
     lines.add("set -x");
     lines.add("env");
     if (StringUtils.isNotEmpty(uid)) {

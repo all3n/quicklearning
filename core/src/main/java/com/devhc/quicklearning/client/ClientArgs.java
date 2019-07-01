@@ -11,6 +11,8 @@ public class ClientArgs {
   @Option(name = "-q", aliases = "--queue", usage = "queue")
   private String queue;
 
+  @Option(name = "-m", aliases = "--master", usage = "master")
+  private String master = "yarn";
 
   @Option(name = "-c", aliases = "--config", usage = "job config")
   private String config = "config.json";

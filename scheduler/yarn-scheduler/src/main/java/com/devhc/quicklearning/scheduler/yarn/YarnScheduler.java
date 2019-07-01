@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 import lombok.var;
 import org.apache.commons.lang.StringUtils;
@@ -52,6 +53,7 @@ import org.slf4j.LoggerFactory;
  */
 
 
+@Named("yarn")
 @Singleton
 public class YarnScheduler extends BaseScheduler {
 

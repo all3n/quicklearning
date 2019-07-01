@@ -3,7 +3,7 @@ package com.devhc.quicklearning.history;
 import com.devhc.quicklearning.history.controllers.IndexController;
 import com.devhc.quicklearning.server.jersey.JerseyModule;
 import com.devhc.quicklearning.server.jersey.configuration.JerseyConfiguration;
-import com.devhc.quicklearning.utils.JobUtils;
+import com.devhc.quicklearning.utils.ArgsUtils;
 import com.google.inject.AbstractModule;
 
 public class HistoryServerModules extends AbstractModule {
@@ -11,7 +11,7 @@ public class HistoryServerModules extends AbstractModule {
   private final HistoryServerArgs args;
 
   public HistoryServerModules(String args[]) {
-    this.args = JobUtils.parseArgument(new HistoryServerArgs(), args);
+    this.args = ArgsUtils.parseArgument(new HistoryServerArgs(), args);
   }
 
 

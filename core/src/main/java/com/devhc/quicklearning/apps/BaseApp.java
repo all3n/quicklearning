@@ -11,6 +11,7 @@ public abstract class BaseApp {
   private String appId;
 
 
+  public abstract void init();
   public abstract List<AppJob> getAppContainerInfo();
   public abstract String genCmds(AppJob job, int index, String suffix);
   public abstract JobConfigJson getConfig();

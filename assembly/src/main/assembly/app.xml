@@ -6,9 +6,10 @@
   <includeBaseDirectory>false</includeBaseDirectory>
   <dependencySets>
     <dependencySet>
-      <useProjectArtifact>true</useProjectArtifact>
+      <outputDirectory>/</outputDirectory>
+      <useProjectArtifact>false</useProjectArtifact>
       <includes>
-        <include>com.devhc.quicklearning:quicklearning-core</include>
+        <include>com.devhc.quicklearning:quicklearning-shade</include>
       </includes>
     </dependencySet>
   </dependencySets>
@@ -27,13 +28,17 @@
       <directory>${project.parent.basedir}/conf</directory>
     </fileSet>
     <fileSet>
-        <outputDirectory>/web/appmaster</outputDirectory>
+      <outputDirectory>/web/appmaster</outputDirectory>
       <directory>${project.parent.basedir}/public/target/appmaster</directory>
     </fileSet>
     <fileSet>
-        <outputDirectory>/web/historyserver</outputDirectory>
+      <outputDirectory>/web/historyserver</outputDirectory>
       <directory>${project.parent.basedir}/public/target/historyserver</directory>
     </fileSet>
   </fileSets>
+  <containerDescriptorHandlers>
+    <containerDescriptorHandler>
+      <handlerName>metaInf-services</handlerName>
+    </containerDescriptorHandler>
+  </containerDescriptorHandlers>
 </assembly>
-
