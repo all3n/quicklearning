@@ -1,5 +1,6 @@
 package com.devhc.quicklearning.client;
 
+import com.devhc.quicklearning.utils.CommonUtils;
 import com.google.common.collect.Lists;
 import com.google.inject.Guice;
 import com.google.inject.Module;
@@ -14,6 +15,7 @@ public class Client {
       List<Module> moduleList = Lists.newArrayList();
       moduleList.add(new ClientModules(args));
       IClient client = Guice.createInjector(moduleList).getInstance(IClient.class);
+      client.init();
       client.start();
 
     } catch (Exception e) {

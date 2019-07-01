@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import javax.inject.Inject;
 import javax.inject.Named;
 import org.apache.commons.io.FileUtils;
@@ -48,11 +49,12 @@ import org.slf4j.LoggerFactory;
 @Named("yarn")
 public class YarnSubmitClient implements IClient{
 
-  private final String localTmpDir;
-  private final JobConfigJson jobConfig;
+  private String localTmpDir;
+  private JobConfigJson jobConfig;
   private Logger LOG = LoggerFactory.getLogger(YarnSubmitClient.class);
 
-  private final String user;
+  private String user;
+  @Inject
   private ClientArgs args;
 
   private ArrayList<String> dependentFiles = new ArrayList<>();
@@ -66,11 +68,14 @@ public class YarnSubmitClient implements IClient{
   private String workspaceDistFile;
   private String frameworkHdfs;
   private String frameworkLocal;
+  public YarnSubmitClient(){
 
-  @Inject
-  public YarnSubmitClient(ClientArgs args) throws IOException {
-    System.out.println(IOUtils.toString(getClass().getClassLoader().
-        getResourceAsStream(Constants.BANNER), Charsets.UTF_8));
+  }
+
+  @Override
+  public void init() throws IOException {
+    System.out.println(IOUtils.toString(Objects.requireNonNull(getClass().getClassLoader().
+        getResourceAsStream(Constants.BANNER)), Charsets.UTF_8));
     this.args = args;
     LOG.info("args {}", args);
     user = CommonUtils.getCurUser();

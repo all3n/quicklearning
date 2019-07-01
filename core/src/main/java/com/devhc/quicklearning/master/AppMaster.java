@@ -20,6 +20,7 @@ public class AppMaster {
   private InetAddress address;
 
 
+  @Inject
   MasterArgs args;
 
   @Inject
@@ -28,16 +29,15 @@ public class AppMaster {
   @Inject
   RpcServer rpcServer;
 
+  @Inject
   BaseScheduler scheduler;
 
+  @Inject
   BaseApp app;
 
 
-  @Inject
-  public AppMaster(MasterArgs args, BaseApp app, BaseScheduler scheduler) throws Exception {
-    this.args = args;
-    this.scheduler = scheduler;
-    this.app = app;
+  public void init() throws Exception {
+    app.init();
     LOG.info("master args:{}", args);
 
     try {
@@ -80,11 +80,13 @@ public class AppMaster {
       List<Module> moduleList = Lists.newArrayList();
       moduleList.add(new AppMasterModules(args));
       AppMaster master = Guice.createInjector(moduleList).getInstance(AppMaster.class);
+      master.init();
       master.start();
 
     } catch (Exception e) {
       e.printStackTrace();
     }
   }
+
 
 }

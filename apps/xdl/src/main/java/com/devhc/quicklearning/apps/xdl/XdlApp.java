@@ -11,32 +11,37 @@ import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 import lombok.var;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Singleton
+//@Singleton
+@Named("xdl")
 public class XdlApp extends BaseApp {
 
   private static Logger LOG = LoggerFactory.getLogger(XdlApp.class);
 
-  private JobConfigJson conf;
   private ArrayList<AppJob> appJobs;
   private String config;
   @Inject
   BaseScheduler scheduler;
+  @Inject
+  MasterArgs masterArgs;
+  @Inject
+  private JobConfigJson conf;
 
   public static AppResource DEFAULT_RES = AppResource.builder()
       .instance(1)
       .memory(4096).vcore(4)
       .build();
 
-  @Inject
-  public XdlApp(MasterArgs args, JobConfigJson conf) {
-    this.config = args.getConfigFile();
-    this.conf = conf;
+
+  @Override
+  public void init(){
+    config = masterArgs.getConfigFile();
     intAppContainers();
   }
 
