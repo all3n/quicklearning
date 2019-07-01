@@ -1,4 +1,4 @@
-package com.devhc.quicklearning.apps.xdl;
+package com.devhc.quicklearning.apps.tensorflow;
 
 import com.devhc.quicklearning.apps.AppJob;
 import com.devhc.quicklearning.apps.AppResource;
@@ -12,13 +12,11 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 import lombok.var;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//@Singleton
 @Named("xdl")
 public class XdlApp extends BaseApp {
 

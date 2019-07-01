@@ -1,4 +1,4 @@
-package com.devhc.quicklearning.apps.xdl;
+package com.devhc.quicklearning.apps.tensorflow;
 
 import com.devhc.quicklearning.apps.AppContainerModule;
 import com.devhc.quicklearning.conf.QuickLearningConf;
@@ -8,7 +8,6 @@ import com.devhc.quicklearning.utils.CmdUtils;
 import com.devhc.quicklearning.utils.CommonUtils;
 import com.devhc.quicklearning.utils.Constants;
 import com.devhc.quicklearning.beans.JobConfigJson;
-import com.devhc.quicklearning.utils.JobUtils;
 import com.devhc.quicklearning.utils.JsonUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -30,6 +29,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * run xdl in container
+ *
  * @author wanghuacheng this  script run in master alloc containers
  */
 public class XdlContainerRunner {
@@ -125,8 +126,6 @@ public class XdlContainerRunner {
     String jobType = args.getJobType();
     Preconditions.checkNotNull(config.docker_image, "docker must not be null");
     dockerManager.pull(config.docker_image);
-
-//    var jobRes = config.jobs.get(jobType);
 
     var jobRes = XdlApp.getTypeJob(config, jobType).getResource();
 

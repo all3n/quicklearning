@@ -11,6 +11,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <modules>
         <module>xdl</module>
+        <module>tensorflow</module>
     </modules>
     <dependencies>
         <dependency>

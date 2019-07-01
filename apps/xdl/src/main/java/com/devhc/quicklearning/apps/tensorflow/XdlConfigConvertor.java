@@ -1,8 +1,8 @@
-package com.devhc.quicklearning.apps.xdl;
+package com.devhc.quicklearning.apps.tensorflow;
 
-import com.devhc.quicklearning.apps.xdl.XdlConfigJson.AutoRebalance;
-import com.devhc.quicklearning.apps.xdl.XdlConfigJson.Checkpoint;
-import com.devhc.quicklearning.apps.xdl.XdlConfigJson.RoleResource;
+import com.devhc.quicklearning.apps.tensorflow.XdlConfigJson.AutoRebalance;
+import com.devhc.quicklearning.apps.tensorflow.XdlConfigJson.Checkpoint;
+import com.devhc.quicklearning.apps.tensorflow.XdlConfigJson.RoleResource;
 import com.devhc.quicklearning.beans.JobConfigJson;
 import com.google.common.base.Preconditions;
 import lombok.var;

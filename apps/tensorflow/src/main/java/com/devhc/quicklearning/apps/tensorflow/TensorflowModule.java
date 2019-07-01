@@ -1,14 +1,14 @@
-package com.devhc.quicklearning.apps.xdl;
+package com.devhc.quicklearning.apps.tensorflow;
 
 import com.devhc.quicklearning.utils.JsonUtils;
 import com.devhc.quicklearning.beans.JobConfigJson;
 import com.google.inject.AbstractModule;
 
-public class XdlModule extends AbstractModule {
+public class TensorflowModule extends AbstractModule {
 
-  private final XdlArgs args;
+  private final TensorflowArgs args;
 
-  public XdlModule(XdlArgs appArgs) {
+  public TensorflowModule(TensorflowArgs appArgs) {
     this.args = appArgs;
   }
 

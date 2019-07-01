@@ -1,4 +1,4 @@
-package com.devhc.quicklearning.apps.xdl;
+package com.devhc.quicklearning.apps.tensorflow;
 
 import java.util.Map;
 import lombok.Builder;
