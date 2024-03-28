@@ -1,18 +1,16 @@
 package com.devhc.quicklearning.controllers;
 
 
+import static com.devhc.quicklearning.beans.ApiResponse.not_found;
+import static com.devhc.quicklearning.beans.ApiResponse.ok;
+
 import com.devhc.quicklearning.apps.AppContainer;
 import com.devhc.quicklearning.apps.AppContainers;
 import com.devhc.quicklearning.apps.BaseApp;
-
-import static com.devhc.quicklearning.beans.ApiResponse.*;
-
 import com.devhc.quicklearning.beans.ApiResponse;
 import com.devhc.quicklearning.scheduler.BaseScheduler;
 import com.devhc.quicklearning.scheduler.yarn.YarnResourceAllocator;
 import com.devhc.quicklearning.scheduler.yarn.YarnScheduler;
-import com.devhc.quicklearning.utils.Constants;
-import com.devhc.quicklearning.utils.JobConfigJson;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.List;

@@ -21,7 +21,8 @@
     <jersey.version>2.28</jersey.version>
     <hk2-bridge.version>2.5.0</hk2-bridge.version>
     <guava.version>22.0</guava.version>
-    <grpc.version>1.16.0</grpc.version>
+    <grpc.version>1.62.2</grpc.version>
+    <protobuf.version>3.25.1</protobuf.version>
     <boringssl.version>2.0.17.Final</boringssl.version>
     <hadoop.scope>provided</hadoop.scope>
   </properties>
@@ -189,11 +190,15 @@
       <artifactId>netty-tcnative-boringssl-static</artifactId>
       <version>${boringssl.version}</version>
     </dependency>
-
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java</artifactId>
+      <version>${protobuf.version}</version>
+    </dependency>
     <dependency>
       <groupId>com.alibaba</groupId>
       <artifactId>fastjson</artifactId>
-      <version>1.2.28</version>
+      <version>1.2.83</version>
     </dependency>
   </dependencies>
 
@@ -310,7 +315,7 @@
         <artifactId>protobuf-maven-plugin</artifactId>
         <version>0.5.1</version>
         <configuration>
-          <protocArtifact>com.google.protobuf:protoc:3.0.0:exe:${os.detected.classifier}
+            <protocArtifact>com.google.protobuf:protoc:${protobuf.version}:exe:${os.detected.classifier}
           </protocArtifact>
         </configuration>
         <executions>
@@ -321,7 +326,7 @@
             </goals>
             <configuration>
               <pluginId>lite</pluginId>
-              <pluginArtifact>com.google.protobuf:protoc-gen-javalite:3.0.0</pluginArtifact>
+              <pluginArtifact>com.google.protobuf:protoc-gen-javalite:${protobuf.version}</pluginArtifact>
             </configuration>
           </execution>
           <execution>
@@ -397,6 +402,11 @@
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
         <version>${guava.version}</version>
+      </dependency>
+      <dependency>
+           <groupId>com.google.protobuf</groupId>
+           <artifactId>protobuf-java</artifactId>
+           <version>${protobuf.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
